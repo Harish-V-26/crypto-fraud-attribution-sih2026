@@ -1,0 +1,280 @@
+{
+  "_notice": "Public exchange/VASP hot and deposit wallet addresses. Small curated sample.",
+  "bitcoin": [
+    {
+      "address": "3M219KR5vEneNb47ewrPfWyb5jQ2DjxRP6",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo",
+      "exchange": "Binance",
+      "type": "cold_wallet"
+    },
+    {
+      "address": "bc1qm34lsc65zpw79lxes69zkqmk6ee3ewf0j77s3h",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "1NDyJtNTjmwk5xPNhjgAMu4HDHigtobu1s",
+      "exchange": "Binance",
+      "type": "cold_wallet"
+    },
+    {
+      "address": "3LQUu4v9z6KNch71j7kbj8GPeAGUo1FW6a",
+      "exchange": "Bitfinex",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "3D2oetdNuZUqQHPJmcMDDLI7hjuzuw1LOL",
+      "exchange": "Bitfinex",
+      "type": "cold_wallet"
+    },
+    {
+      "address": "1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF",
+      "exchange": "Huobi",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "3Ang6RnPUbGTsQe8ijPGrKWM3PMoYD3fWZ",
+      "exchange": "Coinbase",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ",
+      "exchange": "WazirX",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "1Kr6QSydW9bFQG1mXiPNNu6WpJGmUa9i1g",
+      "exchange": "OKX",
+      "type": "hot_wallet"
+    }
+  ],
+  "ethereum": [
+    {
+      "address": "0x28C6c06298d514Db089934071355E5743bf21d60",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0x21a31Ee1afC51d94C2eFcCAa2092aD1028285549",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0xDFd5293D8e347dFe59E90eFd55b2956a1343963d",
+      "exchange": "Binance",
+      "type": "cold_wallet"
+    },
+    {
+      "address": "0x71660c4005BA85c37ccec55d0C4493E66Fe775d3",
+      "exchange": "Coinbase",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0x503828976D22510aad0201ac7EC88293211D923",
+      "exchange": "Coinbase",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0x564286362092D8e7936f0549571a803B203aAceD",
+      "exchange": "Binance",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0xa910f92ACdAf488fa6eF02174fb86208Ad7722ba",
+      "exchange": "Bybit",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0x876EabF441B2EE5B5b0554Fd502a8E0600950cFa",
+      "exchange": "WazirX",
+      "type": "hot_wallet"
+    },
+    {
+      "address": "0xA7efAe728D2936e78BDA97dc267687568dD593f3",
+      "exchange": "Kraken",
+      "type": "hot_wallet"
+    }
+  ],
+  "mixers_and_high_risk": {
+    "ethereum": [
+      {
+        "address": "0x8589427373D6D84E98730D7795D8f6f8731FDA0",
+        "service": "Tornado Cash",
+        "risk": "critical"
+      },
+      {
+        "address": "0x722122dF12D4e14e13Ac3b6895a86e84145b6967",
+        "service": "Tornado Cash Router",
+        "risk": "critical"
+      },
+      {
+        "address": "0xd90e2f925DA726b50C4Ed8D0Fb90Ad053324F31b",
+        "service": "Tornado Cash",
+        "risk": "critical"
+      },
+      {
+        "address": "0x47CE0C6eD5B0Ce3d3A51fdb1C52DC66a7c3c2936",
+        "service": "Tornado Cash",
+        "risk": "critical"
+      },
+      {
+        "address": "0x910Cbd523D972eb0a6f4cae4618aD62622b39DbF",
+        "service": "Tornado Cash",
+        "risk": "critical"
+      }
+    ],
+    "bitcoin": [
+      {
+        "address": "bc1qmixerdemo000000000000000000000000000",
+        "service": "Generic BTC Mixer (simulated)",
+        "risk": "critical"
+      },
+      {
+        "address": "bc1qxy2kgdygjrsqtzq2n0yrf249zg9v0dmx8v62fy",
+        "service": "Wasabi Wallet CoinJoin",
+        "risk": "high"
+      }
+    ]
+  },
+  "cross_chain_bridges": {
+    "ethereum": [
+      {
+        "address": "0x3ee18B2214AFF97000D974cf647E7C347E8fa585",
+        "bridge": "Wormhole Token Bridge",
+        "destination_chains": [
+          "solana",
+          "bsc",
+          "polygon",
+          "avalanche"
+        ],
+        "risk": "high"
+      },
+      {
+        "address": "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f",
+        "bridge": "Arbitrum One Bridge",
+        "destination_chains": [
+          "arbitrum"
+        ],
+        "risk": "medium"
+      },
+      {
+        "address": "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1",
+        "bridge": "Optimism Gateway",
+        "destination_chains": [
+          "optimism"
+        ],
+        "risk": "medium"
+      },
+      {
+        "address": "0x2796317b0fF8538F253012862c06787Adfb8cEb",
+        "bridge": "Stargate Finance",
+        "destination_chains": [
+          "bsc",
+          "polygon",
+          "avalanche",
+          "arbitrum",
+          "optimism"
+        ],
+        "risk": "high"
+      },
+      {
+        "address": "0xB8901acB165ed027E32754E0FFe830802919727f",
+        "bridge": "Hop Protocol",
+        "destination_chains": [
+          "polygon",
+          "arbitrum",
+          "optimism",
+          "xdai"
+        ],
+        "risk": "medium"
+      }
+    ],
+    "bitcoin": [
+      {
+        "address": "3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX",
+        "bridge": "RenBridge BTC",
+        "destination_chains": [
+          "ethereum",
+          "bsc",
+          "polygon"
+        ],
+        "risk": "high"
+      },
+      {
+        "address": "bc1qbridge00wormhole0000000000000000sim",
+        "bridge": "Wormhole BTC Bridge (simulated)",
+        "destination_chains": [
+          "solana",
+          "ethereum"
+        ],
+        "risk": "high"
+      }
+    ]
+  },
+  "defi_protocols": {
+    "ethereum": [
+      {
+        "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+        "protocol": "Uniswap V2 Router",
+        "category": "dex",
+        "risk": "medium"
+      },
+      {
+        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "protocol": "Uniswap V3 Router",
+        "category": "dex",
+        "risk": "medium"
+      },
+      {
+        "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+        "protocol": "Uniswap V3 Router 2",
+        "category": "dex",
+        "risk": "medium"
+      },
+      {
+        "address": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
+        "protocol": "Aave V2 LendingPool",
+        "category": "lending",
+        "risk": "medium"
+      },
+      {
+        "address": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+        "protocol": "Aave V3 Pool",
+        "category": "lending",
+        "risk": "medium"
+      },
+      {
+        "address": "0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3b",
+        "protocol": "Compound",
+        "category": "lending",
+        "risk": "medium"
+      },
+      {
+        "address": "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        "protocol": "1inch Aggregator V4",
+        "category": "dex",
+        "risk": "medium"
+      },
+      {
+        "address": "0xDef1C0ded9bec7F1a1670819833240f027b25EfF",
+        "protocol": "0x Exchange Proxy",
+        "category": "dex",
+        "risk": "medium"
+      }
+    ]
+  }
+}

@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blockchain Clone Simulation — Crypto Fraud Attribution</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ───────── FULL-SCREEN CANVAS WORLD ───────── */
+  html, body { margin:0; padding:0; overflow:hidden; background:#060d10; color:#dfe6e8; font-family:'IBM Plex Sans',sans-serif; }
+  #c { position:fixed; top:0; left:0; width:100vw; height:100vh; display:block; }
+
+  /* ───────── TOP BAR ───────── */
+  .topbar3d {
+    position:fixed; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; gap:14px;
+    padding:10px 22px;
+    background:rgba(6,13,16,0.82); backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(79,179,169,0.18);
+  }
+  .brand-mark3d { font-size:22px; color:#4fb3a9; }
+  .brand-title3d { font-weight:700; font-size:15px; letter-spacing:0.03em; }
+  .brand-sub3d { font-size:11px; color:#8a999e; }
+  .topbar3d .spacer { flex:1; }
+  .back-link3d { font-size:12px; color:#8a999e; text-decoration:none; padding:5px 10px; border:1px solid #2a353b; border-radius:4px; }
+  .back-link3d:hover { color:#4fb3a9; border-color:#4fb3a9; }
+
+  /* ───────── LEFT CONTROL PANEL ───────── */
+  #leftPanel {
+    position:fixed; top:72px; left:18px; z-index:20; width:260px;
+    background:rgba(14,20,24,0.9); border:1px solid rgba(79,179,169,0.2);
+    border-radius:8px; padding:16px; backdrop-filter:blur(8px);
+  }
+  #leftPanel h3 { margin:0 0 10px; font-size:12px; color:#8a999e; text-transform:uppercase; letter-spacing:0.08em; }
+  #caseSelect { width:100%; background:#0f1417; border:1px solid #2a353b; color:#dfe6e8; padding:8px 10px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-bottom:10px; }
+  .ctrl-row { display:flex; gap:6px; margin-bottom:8px; }
+  .ctrl-btn { flex:1; background:#0f1417; border:1px solid #2a353b; color:#8a999e; padding:7px 4px; border-radius:4px; cursor:pointer; font-size:12px; transition:all 0.15s; }
+  .ctrl-btn:hover { border-color:#4fb3a9; color:#4fb3a9; }
+  .ctrl-btn[data-playing] { background:#1a3a37; border-color:#4fb3a9; color:#4fb3a9; }
+  #playBtn { background:#1a3a37; border-color:#4fb3a9; color:#4fb3a9; font-size:16px; }
+  .speed-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; color:#8a999e; }
+  #speedSel { background:#0f1417; border:1px solid #2a353b; color:#dfe6e8; padding:4px 6px; border-radius:3px; font-size:12px; }
+  #muteBtn { width:100%; margin-top:2px; }
+  #statusBar {
+    margin-top:12px; padding:8px 10px; border-radius:4px;
+    background:#080f12; border:1px solid #1a2e33;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:#4fb3a9;
+    min-height:32px; line-height:1.4;
+  }
+
+  /* ───────── TIMELINE SCRUBBER ───────── */
+  #scrubRow {
+    position:fixed; bottom:0; left:0; right:0; z-index:20;
+    background:rgba(6,13,16,0.88); border-top:1px solid rgba(79,179,169,0.15);
+    padding:12px 24px; display:flex; align-items:center; gap:14px;
+    backdrop-filter:blur(6px);
+  }
+  #scrubRow label { font-size:11px; color:#8a999e; white-space:nowrap; }
+  #scrubber { flex:1; accent-color:#4fb3a9; cursor:pointer; }
+  #scrubPct { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#4fb3a9; min-width:44px; }
+
+  /* ───────── RIGHT INSPECTOR PANEL ───────── */
+  #inspector {
+    position:fixed; top:72px; right:-320px; z-index:20; width:300px;
+    background:rgba(14,20,24,0.95); border:1px solid rgba(79,179,169,0.2);
+    border-radius:8px; padding:18px; backdrop-filter:blur(10px);
+    transition:right 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  #inspector.open { right:18px; }
+  .ins-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .ins-type { font-size:10px; padding:3px 8px; border-radius:12px; font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.07em; }
+  .ins-type--source   { background:#1a3a37; color:#4fb3a9; }
+  .ins-type--layering { background:#1c2e33; color:#8a999e; }
+  .ins-type--mixer    { background:#3a1818; color:#c85a4f; }
+  .ins-type--exchange { background:#3a2a10; color:#d99a3f; }
+  .ins-label { font-size:16px; font-weight:600; margin-bottom:6px; }
+  .ins-addr { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#8a999e; word-break:break-all; margin-bottom:14px; padding:8px; background:#080f12; border-radius:4px; border:1px solid #1a2e33; }
+  .ins-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #1a2e33; font-size:12.5px; }
+  .ins-key { color:#8a999e; }
+  .ins-val { font-family:'IBM Plex Mono',monospace; color:#dfe6e8; }
+  .ins-actions { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+  .ins-btn { display:block; text-align:center; padding:8px 12px; border-radius:4px; font-size:12.5px; cursor:pointer; text-decoration:none;
+    border:1px solid #2a4a47; color:#4fb3a9; background:transparent; font-family:'IBM Plex Sans',sans-serif; }
+  .ins-btn:hover { background:#1a3a37; }
+  .ins-btn--freeze { border-color:#4466ff; color:#8899ff; }
+  .ins-btn--freeze:hover { background:#1a1e40; }
+
+  /* ───────── HUD PANELS (right-column) ───────── */
+  #hudColumn {
+    position:fixed; top:72px; right:18px; z-index:15; width:200px;
+    display:flex; flex-direction:column; gap:10px;
+    pointer-events:none;
+  }
+  .hud-card {
+    background:rgba(14,20,24,0.85); border:1px solid rgba(42,53,59,0.9);
+    border-radius:6px; padding:12px 14px; backdrop-filter:blur(6px);
+  }
+  .hud-card h4 { margin:0 0 6px; font-size:10px; color:#8a999e; text-transform:uppercase; letter-spacing:0.08em; }
+  #hudRisk { } /* content set by JS */
+  .hud-stat { display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-size:12px; }
+  .hud-stat-key { color:#8a999e; }
+  .hud-stat-val { font-family:'IBM Plex Mono',monospace; color:#4fb3a9; font-weight:600; }
+  #hudAttr { font-size:12px; line-height:1.5; padding:8px; border-radius:4px; border:1px solid #2a353b; background:#080f12; margin-top:2px; }
+
+  /* ───────── LEGEND ───────── */
+  #legend {
+    position:fixed; bottom:58px; left:18px; z-index:20;
+    background:rgba(14,20,24,0.88); border:1px solid rgba(42,53,59,0.8);
+    border-radius:6px; padding:12px 14px; backdrop-filter:blur(6px);
+    font-size:11.5px;
+  }
+  .leg-row { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .leg-row:last-child { margin-bottom:0; }
+  .leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .leg-shape-icosa { clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%); }
+  .leg-shape-octa   { clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); border-radius:0; }
+
+  /* ───────── EMPTY STATE ───────── */
+  #emptyState {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    text-align:center; color:#8a999e; z-index:5; pointer-events:none;
+  }
+  #emptyState .es-title { font-size:22px; font-weight:600; color:#4fb3a9; margin-bottom:8px; }
+  #emptyState .es-sub { font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- CANVAS WORLD -->
+<canvas id="c"></canvas>
+
+<!-- TOP BAR -->
+<div class="topbar3d">
+  <span class="brand-mark3d">◈</span>
+  <div>
+    <div class="brand-title3d">Blockchain Clone Simulation</div>
+    <div class="brand-sub3d">Real-Time Crypto Fraud Attribution · SIH 2026</div>
+  </div>
+  <div class="spacer"></div>
+  <a href="index.html" class="back-link3d">← Dashboard</a>
+</div>
+
+<!-- LEFT CONTROL PANEL -->
+<div id="leftPanel">
+  <h3>Select Case</h3>
+  <select id="caseSelect"><option>Loading…</option></select>
+
+  <div class="ctrl-row">
+    <button id="playBtn" class="ctrl-btn" title="Play/Pause replay">▶ Play</button>
+    <button id="restartBtn" class="ctrl-btn" title="Restart from hop 0">↺</button>
+  </div>
+  <div class="ctrl-row">
+    <button id="stepBwd" class="ctrl-btn" title="Step back one hop">◀ Hop</button>
+    <button id="stepFwd" class="ctrl-btn" title="Step forward one hop">Hop ▶</button>
+  </div>
+  <div class="speed-row">
+    <span>Speed</span>
+    <select id="speedSel">
+      <option value="0.5">0.5×</option>
+      <option value="1" selected>1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+    </select>
+  </div>
+  <button id="muteBtn" class="ctrl-btn">🔇 Sound OFF</button>
+
+  <div id="statusBar">Initialising blockchain universe…</div>
+</div>
+
+<!-- HUD — right column (behind inspector, inspector slides over it) -->
+<div id="hudColumn">
+  <div class="hud-card" id="hudRisk">
+    <h4>Risk Score</h4>
+    <div style="color:#8a999e;font-size:12px">Load a case to score</div>
+  </div>
+  <div class="hud-card">
+    <h4>Trace Stats</h4>
+    <div class="hud-stat"><span class="hud-stat-key">Hops</span><span class="hud-stat-val" id="hudHops">0</span></div>
+    <div class="hud-stat"><span class="hud-stat-key">Value</span><span class="hud-stat-val" id="hudBTC">0</span></div>
+    <div class="hud-stat"><span class="hud-stat-key">Mixer</span><span class="hud-stat-val" id="hudMixer">—</span></div>
+    <div class="hud-stat"><span class="hud-stat-key">Exchange</span><span class="hud-stat-val" id="hudExchange">—</span></div>
+  </div>
+  <div class="hud-card">
+    <h4>Attribution</h4>
+    <div id="hudAttr"><span style="color:#5c7a82">Load a case…</span></div>
+  </div>
+</div>
+
+<!-- INSPECTOR (slides in from right) -->
+<div id="inspector"></div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div class="leg-row"><span class="leg-dot" style="background:#4fb3a9"></span> Victim-reported (sphere)</div>
+  <div class="leg-row"><span class="leg-dot" style="background:#5c7a82"></span> Layering wallet (sphere)</div>
+  <div class="leg-row"><span class="leg-dot leg-shape-icosa" style="background:#c85a4f;border-radius:0"></span> Mixer / tumbler (icosahedron)</div>
+  <div class="leg-row"><span class="leg-dot leg-shape-octa" style="background:#d99a3f;width:11px;height:11px"></span> Exchange / VASP (octahedron)</div>
+  <div class="leg-row"><span class="leg-dot" style="background:#ff8844;border-radius:50%;border:2px solid #ff8844"></span> Cross-chain bridge (torus)</div>
+  <div class="leg-row"><span class="leg-dot" style="background:#8899ff;clip-path:polygon(50% 0%,100% 100%,0% 100%);border-radius:0"></span> DeFi protocol (tetrahedron)</div>
+</div>
+
+<!-- TIMELINE SCRUBBER -->
+<div id="scrubRow">
+  <label for="scrubber">Timeline</label>
+  <input type="range" id="scrubber" min="0" max="0" value="0" step="1">
+  <span id="scrubPct">— / —</span>
+</div>
+
+<!-- EMPTY STATE -->
+<div id="emptyState">
+  <div class="es-title">◈ Blockchain Universe Active</div>
+  <div class="es-sub">Select a traced case and press ▶ Play to begin the simulation</div>
+</div>
+
+<!-- THREE.JS + ORBITCONTROLS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* Inline OrbitControls (r128-compatible subset) */
+(function(THREE){
+'use strict';
+THREE.OrbitControls=function(object,domElement){
+  const scope=this; this.object=object; this.domElement=domElement;
+  this.enabled=true; this.target=new THREE.Vector3();
+  this.minDistance=0; this.maxDistance=Infinity;
+  this.enableDamping=false; this.dampingFactor=0.05;
+  let spherical=new THREE.Spherical(), sphericalDelta=new THREE.Spherical();
+  let scale=1, panOffset=new THREE.Vector3();
+  let rotateStart=new THREE.Vector2(), rotateEnd=new THREE.Vector2(), rotateDelta=new THREE.Vector2();
+  let panStart=new THREE.Vector2(), panEnd=new THREE.Vector2(), panDelta=new THREE.Vector2();
+  let dollyStart=new THREE.Vector2(), dollyEnd=new THREE.Vector2(), dollyDelta=new THREE.Vector2();
+  const STATE={NONE:-1,ROTATE:0,DOLLY:1,PAN:2}; let state=STATE.NONE;
+  const EPS=0.000001, twoPI=2*Math.PI;
+
+  function rotateLeft(a){sphericalDelta.theta-=a;}
+  function rotateUp(a){sphericalDelta.phi-=a;}
+  function panLeft(d,m){const v=new THREE.Vector3(); v.setFromMatrixColumn(m,0); v.multiplyScalar(-d); panOffset.add(v);}
+  function panUp(d,m){const v=new THREE.Vector3(); v.setFromMatrixColumn(m,1); v.multiplyScalar(d); panOffset.add(v);}
+  function pan(dx,dy){const el=scope.domElement; if(scope.object.isPerspectiveCamera){const p=scope.object.position.clone().sub(scope.target); let tD=p.length(); tD*=Math.tan((scope.object.fov/2)*Math.PI/180); panLeft(2*dx*tD/el.clientHeight,scope.object.matrix); panUp(2*dy*tD/el.clientHeight,scope.object.matrix);} }
+  function dollyIn(s){scale/=s;}
+  function dollyOut(s){scale*=s;}
+
+  this.update=function(){
+    const offset=new THREE.Vector3(); const quat=new THREE.Quaternion().setFromUnitVectors(object.up,new THREE.Vector3(0,1,0)); const quatInverse=quat.clone().invert();
+    const lastPos=new THREE.Vector3(); const lastQ=new THREE.Quaternion();
+    return function(){
+      const pos=scope.object.position; offset.copy(pos).sub(scope.target); offset.applyQuaternion(quat);
+      spherical.setFromVector3(offset);
+      if(scope.enableDamping){spherical.theta+=sphericalDelta.theta*scope.dampingFactor; spherical.phi+=sphericalDelta.phi*scope.dampingFactor;}
+      else{spherical.theta+=sphericalDelta.theta; spherical.phi+=sphericalDelta.phi;}
+      spherical.phi=Math.max(EPS,Math.min(Math.PI-EPS,spherical.phi));
+      spherical.radius=Math.max(scope.minDistance,Math.min(scope.maxDistance,spherical.radius*scale));
+      spherical.makeSafe();
+      scope.target.add(panOffset);
+      offset.setFromSpherical(spherical); offset.applyQuaternion(quatInverse);
+      pos.copy(scope.target).add(offset);
+      scope.object.lookAt(scope.target);
+      if(scope.enableDamping){sphericalDelta.theta*=(1-scope.dampingFactor); sphericalDelta.phi*=(1-scope.dampingFactor); panOffset.multiplyScalar(1-scope.dampingFactor);}
+      else{sphericalDelta.set(0,0,0); panOffset.set(0,0,0);}
+      scale=1;
+    };
+  }();
+
+  function handleMouseDownRotate(e){rotateStart.set(e.clientX,e.clientY);}
+  function handleMouseDownDolly(e){dollyStart.set(e.clientX,e.clientY);}
+  function handleMouseDownPan(e){panStart.set(e.clientX,e.clientY);}
+  function handleMouseMoveRotate(e){
+    rotateEnd.set(e.clientX,e.clientY); rotateDelta.subVectors(rotateEnd,rotateStart).multiplyScalar(0.5*Math.PI/domElement.clientHeight);
+    rotateLeft(rotateDelta.x); rotateUp(rotateDelta.y); rotateStart.copy(rotateEnd); scope.update();
+  }
+  function handleMouseMoveDolly(e){
+    dollyEnd.set(e.clientX,e.clientY); dollyDelta.subVectors(dollyEnd,dollyStart);
+    if(dollyDelta.y>0)dollyIn(1.07); else if(dollyDelta.y<0)dollyOut(1.07);
+    dollyStart.copy(dollyEnd); scope.update();
+  }
+  function handleMouseMovePan(e){
+    panEnd.set(e.clientX,e.clientY); panDelta.subVectors(panEnd,panStart);
+    pan(panDelta.x,panDelta.y); panStart.copy(panEnd); scope.update();
+  }
+  function onMouseDown(e){
+    if(!scope.enabled)return;
+    if(e.button===0){state=STATE.ROTATE;handleMouseDownRotate(e);}
+    else if(e.button===1){state=STATE.DOLLY;handleMouseDownDolly(e);}
+    else if(e.button===2){state=STATE.PAN;handleMouseDownPan(e);}
+    document.addEventListener('mousemove',onMouseMove); document.addEventListener('mouseup',onMouseUp);
+  }
+  function onMouseMove(e){
+    if(!scope.enabled)return;
+    if(state===STATE.ROTATE)handleMouseMoveRotate(e);
+    else if(state===STATE.DOLLY)handleMouseMoveDolly(e);
+    else if(state===STATE.PAN)handleMouseMovePan(e);
+  }
+  function onMouseUp(){state=STATE.NONE; document.removeEventListener('mousemove',onMouseMove); document.removeEventListener('mouseup',onMouseUp);}
+  function onWheel(e){e.preventDefault(); if(e.deltaY<0)dollyOut(1.07); else dollyIn(1.07); scope.update();}
+  domElement.addEventListener('mousedown',onMouseDown); domElement.addEventListener('wheel',onWheel,{passive:false});
+  domElement.addEventListener('contextmenu',e=>e.preventDefault());
+};
+window.OrbitControls=THREE.OrbitControls;
+})(THREE);
+</script>
+<!-- Blockchain Ambient Sim -->
+<script src="blockchain_sim.js"></script>
+<!-- Main 3D Engine -->
+<script src="app3d.js"></script>
+</body>
+</html>
+

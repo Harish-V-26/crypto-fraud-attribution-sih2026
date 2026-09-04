@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0f1417;
+  --panel: #161d21;
+  --panel-alt: #1c252a;
+  --border: #2a353b;
+  --text: #dfe6e8;
+  --text-dim: #8a999e;
+  --accent: #4fb3a9;
+  --accent-soft: #2a4a47;
+  --amber: #d99a3f;
+  --red: #c85a4f;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--panel-alt); }
+::-webkit-scrollbar-thumb { background: #3a454b; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4fb3a9; }
+
+/* Graph canvas override */
+.graph-canvas-wrapper canvas {
+  border-radius: 8px;
+}
+
+/* Risk badge variants */
+.badge-low    { background: #1e3a2e; color: #6fd196; }
+.badge-medium { background: #3a3320; color: #d99a3f; }
+.badge-high   { background: #3a2620; color: #e08360; }
+.badge-critical { background: #3a1e1e; color: #f07a6e; }
+
+/* Animated pulse for live indicator */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.live-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+/* Tooltip */
+.tooltip {
+  @apply absolute z-50 px-2 py-1 text-xs font-mono rounded bg-panel-alt border border-border text-text-dim pointer-events-none;
+}
+
+/* Freeze notice print styles */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; color: black; }
+  .print-area { padding: 40px; }
+}

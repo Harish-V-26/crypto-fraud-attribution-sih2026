@@ -1,4 +1,4 @@
-﻿"""
+"""
 Core tracing engine — extended with bridge and DeFi detection.
 
 Given a victim-reported wallet address, performs a breadth-first walk
@@ -40,7 +40,7 @@ def _value_of(entry: dict) -> float:
     return entry.get("value_sats") or entry.get("value_wei") or 0
 
 
-async def trace_wallet(address: str, chain: Literal["bitcoin", "ethereum"], max_hops: int = 5, max_branches: int = 3):
+async def trace_wallet(address: str, chain: Literal["bitcoin", "ethereum"], max_hops: int = 12, max_branches: int = 4):
     """
     BFS outward from `address`, following the largest-value outputs of
     each hop, until a known exchange/VASP address is hit or max_hops
@@ -139,6 +139,31 @@ async def trace_wallet(address: str, chain: Literal["bitcoin", "ethereum"], max_
         graph_nodes[next_addr] = {"id": next_addr, "type": node_type, "label": label}
         graph_edges.append({"from": current, "to": next_addr, "txid": txid, "value": value})
         path.append({"address": next_addr, "role": node_type, "txid": txid})
+
+        # --- Add side-branch nodes (secondary outputs) to graph for rich 3D visualisation ---
+        # These show the full "fanout" a real fraudster uses — multiple layering wallets
+        # created simultaneously at each hop to increase complexity.
+        for branch_addr, branch_value, branch_txid in candidates[1: max_branches + 1]:
+            if branch_addr not in graph_nodes and branch_addr not in visited:
+                b_lower = branch_addr.lower()
+                if b_lower in _EXCHANGE_INDEX:
+                    b_type = "exchange"
+                    b_label = _EXCHANGE_INDEX[b_lower].get("exchange", "Exchange")
+                elif b_lower in _MIXER_INDEX:
+                    b_type = "mixer"
+                    b_label = _MIXER_INDEX[b_lower].get("service", "Mixer")
+                elif is_bridge(branch_addr):
+                    b_type = "bridge"
+                    b_label = "Bridge Output"
+                else:
+                    b_type = "layering"
+                    b_label = f"Branch-{hop + 1}"
+                graph_nodes[branch_addr] = {"id": branch_addr, "type": b_type, "label": b_label}
+                graph_edges.append({
+                    "from": current, "to": branch_addr,
+                    "txid": branch_txid, "value": branch_value,
+                    "is_branch": True,
+                })
 
         if node_type == "exchange":
             break

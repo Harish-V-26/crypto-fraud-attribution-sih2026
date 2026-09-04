@@ -46,46 +46,59 @@ def get_mock_eth_address_txs(address: str):
 
 def _next_hop_tx(address: str, chain: str):
     """
-    Returns a single simulated outgoing transaction from `address`.
-    The destination is chosen deterministically from a hash of the
-    address itself, so calling this repeatedly along a chain of
-    derived addresses produces a stable, reproducible path:
+    Returns a list of simulated outgoing transactions from `address`.
+    Generates 3-6 outputs per transaction to simulate the real-world
+    fanout pattern fraudsters use (multiple recipients, layering wallets).
 
-      P(next hop is a known exchange)        ~ 45%
-      P(next hop is a known mixer)            ~ 12%
-      P(next hop is another layering wallet)  ~ 43%
+    Distribution of output types:
+      P(known exchange)   ~ 22%
+      P(known mixer)      ~ 13%
+      P(layering wallet)  ~ 65%
 
-    This gives a geometric-ish distribution of path lengths (mean ~2-3
-    hops before resolution), consistent with typical real-world
-    layering depths, and reliably resolves within the default
-    max_hops=5 trace budget in the large majority of cases.
+    This gives realistic branching graphs in the 3D viewer (20-40+ nodes)
+    while keeping a stable, deterministic path for reproducibility.
     """
     rng = _seeded_rng(address)
     known_list = _KNOWN.get(chain, [])
     mixer_list = _KNOWN.get("mixers_and_high_risk", {}).get(chain, [])
 
-    roll = rng.random()
-    if roll < 0.22 and known_list:
-        next_addr = rng.choice(known_list)["address"]
-    elif roll < 0.35 and mixer_list:
-        next_addr = rng.choice(mixer_list)["address"]
-    else:
-        next_addr = _fake_addr(chain, address)
+    # Number of output candidates — 3 to 6 outputs per hop
+    num_outputs = rng.randint(3, 6)
+    outputs = []
+    used_addrs = {address}
 
-    value = round(rng.uniform(0.05, 3.5), 4)
-    value_unit = "value_sats" if chain == "bitcoin" else "value_wei"
-    value_raw = int(value * (1e8 if chain == "bitcoin" else 1e18))
+    for i in range(num_outputs):
+        roll = rng.random()
+        # Use a different seed per output so they are all distinct
+        rng_out = _seeded_rng(f"{address}::out{i}")
+        if roll < 0.22 and known_list:
+            next_addr = rng_out.choice(known_list)["address"]
+        elif roll < 0.35 and mixer_list:
+            next_addr = rng_out.choice(mixer_list)["address"]
+        else:
+            next_addr = _fake_addr(chain, f"{address}::branch{i}")
+
+        if next_addr in used_addrs:
+            continue
+        used_addrs.add(next_addr)
+
+        # Value varies per output — primary output is largest
+        value = round(rng_out.uniform(0.02, 3.5) * (1.0 if i == 0 else rng_out.uniform(0.1, 0.8)), 4)
+        value_unit = "value_sats" if chain == "bitcoin" else "value_wei"
+        value_raw = int(value * (1e8 if chain == "bitcoin" else 1e18))
+        outputs.append({"address": next_addr, value_unit: value_raw})
+
     now = int(time.time())
-
     tx = {
-        "txid": hashlib.sha256(f"{address}->{next_addr}".encode()).hexdigest(),
-        "inputs": [{"address": address, value_unit: value_raw}],
-        "outputs": [{"address": next_addr, value_unit: value_raw}],
+        "txid": hashlib.sha256(f"{address}->multi".encode()).hexdigest(),
+        "inputs": [{"address": address}],
+        "outputs": outputs,
         "confirmed": True,
         "block_time": now - 3600,
         "simulated": True,
     }
     return [tx]
+
 
 
 def get_mock_mempool(chain: str, count: int = 50) -> list:

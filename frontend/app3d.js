@@ -1,4 +1,4 @@
-﻿/**
+/**
  * app3d.js — Blockchain Clone 3D Simulation Engine
  * Complete rewrite using Three.js directly.
  *
@@ -593,11 +593,12 @@ class BlockchainUniverse {
     const key = TYPE_KEY[hop.node_type] || 'LAYERING';
     const cfg = C[key];
 
-    // Position: spread hops along X axis, slight random Y/Z
-    const spread = 28;
-    const x = (i - (allHops.length-1)/2) * spread;
-    const y = (Math.sin(i * 1.3) * 8);
-    const z = (Math.cos(i * 1.7) * 6);
+    // 3D spread — nodes fan out in X/Y/Z to fill the vector space
+    // Primary path goes along X, with Y and Z variation for depth
+    const spread = 30;
+    const x = (i - (allHops.length - 1) / 2) * spread;
+    const y = Math.sin(i * 1.8) * 14 + (Math.cos(i * 0.7) * 8);
+    const z = Math.cos(i * 2.1) * 18 + (Math.sin(i * 1.2) * 6);
     const pos = new T.Vector3(x, y, z);
 
     if (!this.nodes.has(hop.address)) {
@@ -611,7 +612,11 @@ class BlockchainUniverse {
       const fromNode = this.nodes.get(prev.address);
       const toNode   = this.nodes.get(hop.address);
       if (fromNode && toNode) {
-        const edgeColor = hop.node_type === 'mixer' ? 0xc85a4f : hop.node_type === 'exchange' ? 0xd99a3f : 0x4fb3a9;
+        const edgeColor = hop.node_type === 'mixer' ? 0xc85a4f
+          : hop.node_type === 'exchange' ? 0xd99a3f
+          : hop.node_type === 'bridge'   ? 0xff8844
+          : hop.node_type === 'defi'     ? 0x8899ff
+          : 0x4fb3a9;
         const edge = new TransactionEdge(this.scene, T, fromNode.position.clone(), toNode.position.clone(),
           { txid: hop.txid, value: hop.value }, edgeColor);
         this.edges.push(edge);
@@ -630,7 +635,6 @@ class BlockchainUniverse {
     const mixerTouched = allHops.slice(0, i+1).some(h => h.node_type === 'mixer');
     this._updateHUD(exchangeHop, mixerTouched ? i : null);
 
-    // Update stats counters in HUD
     document.getElementById('hudHops').textContent = i;
     if (hop.value) {
       const prev = parseFloat(document.getElementById('hudBTC').textContent) || 0;
@@ -638,6 +642,102 @@ class BlockchainUniverse {
     }
     if (mixerTouched) document.getElementById('hudMixer').textContent = '⚠ YES';
     if (exchangeHop) document.getElementById('hudExchange').textContent = exchangeHop.label || 'Found';
+  }
+
+  // NEW: Render all nodes from the full graph (including branches) in 3D space
+  revealFullGraph(graphData) {
+    const T = this.THREE;
+    if (!graphData || !graphData.nodes) return;
+
+    const nodes = graphData.nodes;
+    const edges = graphData.edges || [];
+
+    // Layout: primary path nodes go along X axis, branch nodes radiate outward
+    // Build a position map indexed by node ID
+    const posMap = new Map();
+    const primaryIds = new Set(); // nodes that are on the primary path
+
+    // First pass — identify primary (non-branch) edges and their nodes
+    edges.filter(e => !e.is_branch).forEach((e, idx) => {
+      primaryIds.add(e.from);
+      primaryIds.add(e.to);
+    });
+
+    // Lay out primary nodes along X with 3D sinusoidal variation
+    const primaryNodes = nodes.filter(n => primaryIds.has(n.id));
+    const branchNodes  = nodes.filter(n => !primaryIds.has(n.id));
+    const totalPrimary = Math.max(primaryNodes.length, 1);
+
+    primaryNodes.forEach((n, i) => {
+      const t = i / (totalPrimary - 1 || 1);
+      const x = (t - 0.5) * totalPrimary * 28;
+      const y = Math.sin(t * Math.PI * 3) * 16;
+      const z = Math.cos(t * Math.PI * 2.5) * 12;
+      posMap.set(n.id, new T.Vector3(x, y, z));
+    });
+
+    // Branch nodes: orbit around their parent on the primary path
+    branchNodes.forEach((n, i) => {
+      // Find the parent edge
+      const parentEdge = edges.find(e => e.is_branch && e.to === n.id);
+      const parentPos = parentEdge ? (posMap.get(parentEdge.from) || new T.Vector3()) : new T.Vector3();
+      const angle = (i / (branchNodes.length || 1)) * Math.PI * 2;
+      const radius = 22 + (i % 3) * 8;
+      const x = parentPos.x + Math.cos(angle) * radius * 0.7;
+      const y = parentPos.y + Math.sin(i * 1.3) * 14 + 10;
+      const z = parentPos.z + Math.sin(angle) * radius;
+      posMap.set(n.id, new T.Vector3(x, y, z));
+    });
+
+    // Create all WalletNodes
+    nodes.forEach(n => {
+      if (!this.nodes.has(n.id)) {
+        const pos = posMap.get(n.id) || new T.Vector3(
+          (Math.random() - 0.5) * 100,
+          (Math.random() - 0.5) * 40,
+          (Math.random() - 0.5) * 80
+        );
+        const wn = new WalletNode(this.scene, T, n, pos);
+        this.nodes.set(n.id, wn);
+      }
+    });
+
+    // Create all edges
+    edges.forEach(e => {
+      const fromNode = this.nodes.get(e.from);
+      const toNode   = this.nodes.get(e.to);
+      if (!fromNode || !toNode) return;
+      const isBranch = e.is_branch;
+      const edgeColor = isBranch ? 0x3a454b :
+        e.to && this.nodes.get(e.to)?.data?.type === 'mixer'    ? 0xc85a4f :
+        e.to && this.nodes.get(e.to)?.data?.type === 'exchange' ? 0xd99a3f :
+        e.to && this.nodes.get(e.to)?.data?.type === 'bridge'   ? 0xff8844 :
+        0x4fb3a9;
+      const edge = new TransactionEdge(
+        this.scene, T,
+        fromNode.position.clone(),
+        toNode.position.clone(),
+        { txid: e.txid, value: e.value },
+        edgeColor
+      );
+      this.edges.push(edge);
+    });
+
+    // Update HUD
+    const nodeCount = nodes.length;
+    const edgeCount = edges.length;
+    document.getElementById('hudHops').textContent = nodeCount;
+    document.getElementById('statusBar').textContent =
+      `Full graph loaded — ${nodeCount} wallet nodes · ${edgeCount} transaction edges · Press ▶ to replay primary path`;
+
+    // Fit camera to show the whole graph
+    setTimeout(() => {
+      if (this.controls) {
+        this.controls.target.set(0, 0, 0);
+        this.controls.update();
+      }
+      this.camera.position.set(0, 60, 160);
+    }, 500);
   }
 
   _updateHUD(exchangeHop, mixerHop) {
@@ -665,8 +765,18 @@ class BlockchainUniverse {
       this.caseData = caseData;
       this.chain = caseData.chain || 'bitcoin';
       this._updateRiskHUD(caseData.risk_assessment);
+
+      // Clear and render the FULL graph (all nodes including branches) immediately
+      this.clearTrace();
+      const fullGraph = caseData.trace_result?.graph;
+      if (fullGraph && fullGraph.nodes?.length > 0) {
+        this.revealFullGraph(fullGraph);
+      }
+
+      // Also load hops for the step-by-step playback replay
       this.replay.load(hopsData.hops);
-      document.getElementById('statusBar').textContent = `Case ${caseId} loaded — press ▶ Play to replay`;
+      document.getElementById('statusBar').textContent =
+        `Case ${caseId} loaded — ${fullGraph?.nodes?.length || 0} nodes · ${fullGraph?.edges?.length || 0} edges · press ▶ Play to replay hop-by-hop`;
     } catch(e) {
       document.getElementById('statusBar').textContent = 'Failed to load case: ' + e.message;
     }

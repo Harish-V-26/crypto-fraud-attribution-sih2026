@@ -25,11 +25,8 @@ export default function Header() {
             <ShieldCheck size={18} className="text-black" />
           </div>
           <div>
-            <div className="font-semibold text-sm text-black tracking-tight flex items-center gap-2">
-              Crypto Fraud Attribution
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-700 font-mono border border-zinc-200">
-                SIH 2026
-              </span>
+            <div className="font-bold text-base text-black tracking-tight flex items-center gap-2 font-mono">
+              CRYPTOTRACE
             </div>
             <div className="text-[11px] text-zinc-500 font-mono tracking-tight">
               National Cyber Fraud Coordination Platform

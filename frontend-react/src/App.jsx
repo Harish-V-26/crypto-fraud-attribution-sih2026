@@ -279,7 +279,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="text-center text-[11px] text-zinc-500 py-10 px-6 border-t border-zinc-200 max-w-4xl mx-auto space-y-1">
-        <div className="font-semibold text-black">SIH 2026 &middot; Cryptocurrency Fraud Attribution & Asset Tracking System</div>
+        <div className="font-bold text-black font-mono">CRYPTOTRACE &middot; Cryptocurrency Fraud Attribution & Asset Tracking System</div>
         <div className="text-zinc-600 font-mono text-[10.5px]">
           Live On-Chain RPCs &middot; Ethers.js &middot; Bayesian Typology Classifier &middot; NCRP/SAHYOG Interoperability
         </div>

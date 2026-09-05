@@ -1,17 +1,17 @@
 // src/components/RiskPanel.jsx
-// Minimalist tiered risk score display with clean circular meter and entity attribution
+// Black & White tiered risk score display with clean circular meter and entity attribution
 
 import { motion } from 'framer-motion'
 import { ShieldAlert, ShieldCheck, AlertTriangle, Building2, Link, CheckCircle2 } from 'lucide-react'
 
 const RISK_CONFIG = {
-  LOW:      { color: '#34d399', badgeCls: 'badge-low',      label: 'Low Risk',      icon: ShieldCheck,  score_range: '0–29'  },
-  MEDIUM:   { color: '#fbbf24', badgeCls: 'badge-medium',   label: 'Medium Risk',   icon: AlertTriangle, score_range: '30–59' },
-  HIGH:     { color: '#fb923c', badgeCls: 'badge-high',     label: 'High Risk',     icon: ShieldAlert,  score_range: '60–79' },
-  CRITICAL: { color: '#f87171', badgeCls: 'badge-critical', label: 'Critical Risk', icon: ShieldAlert,  score_range: '80–100'},
+  LOW:      { color: '#71717a', barColor: '#52525b', badgeCls: 'badge-low',      label: 'Low Risk',      icon: ShieldCheck,  score_range: '0–29'  },
+  MEDIUM:   { color: '#a1a1aa', barColor: '#71717a', badgeCls: 'badge-medium',   label: 'Medium Risk',   icon: AlertTriangle, score_range: '30–59' },
+  HIGH:     { color: '#e4e4e7', barColor: '#d4d4d8', badgeCls: 'badge-high',     label: 'High Risk',     icon: ShieldAlert,  score_range: '60–79' },
+  CRITICAL: { color: '#ffffff', barColor: '#ffffff', badgeCls: 'badge-critical', label: 'Critical Risk', icon: ShieldAlert,  score_range: '80–100'},
 }
 
-function RiskGauge({ score, color }) {
+function RiskGauge({ score }) {
   const r = 52
   const circumference = 2 * Math.PI * r
   const pct = Math.min(score, 100) / 100
@@ -29,11 +29,11 @@ function RiskGauge({ score, color }) {
           strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
           strokeLinecap="round"
         />
-        {/* Animated fill */}
+        {/* Animated fill - pure white */}
         <motion.circle
           cx="72" cy="72" r={r}
           fill="none"
-          stroke={color}
+          stroke="#ffffff"
           strokeWidth="8"
           strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
           strokeLinecap="round"
@@ -44,7 +44,7 @@ function RiskGauge({ score, color }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
-          className="font-mono font-bold text-3xl text-zinc-100"
+          className="font-mono font-bold text-3xl text-white"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
@@ -61,7 +61,7 @@ function RiskIndicators({ reasons }) {
   return (
     <ul className="space-y-2 mt-3">
       {reasons.length === 0 ? (
-        <li className="text-xs text-zinc-400">No elevated risk indicators detected for this address.</li>
+        <li className="text-xs text-zinc-400 font-mono">No elevated risk indicators detected for this address.</li>
       ) : reasons.map((r, i) => (
         <motion.li
           key={i}
@@ -70,7 +70,7 @@ function RiskIndicators({ reasons }) {
           transition={{ delay: 0.05 * i }}
           className="flex items-start gap-2.5 text-xs text-zinc-300 font-sans leading-relaxed"
         >
-          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
           <span>{r}</span>
         </motion.li>
       ))}
@@ -94,10 +94,10 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
       className="space-y-4 font-sans"
     >
       {/* Risk Score Card */}
-      <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
         <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-2">
           <div className="flex items-center gap-2">
-            <Icon size={16} style={{ color: cfg.color }} />
+            <Icon size={16} className="text-white" />
             <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
               Risk Evaluation · {cfg.label}
             </h3>
@@ -107,7 +107,7 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
           </span>
         </div>
 
-        <RiskGauge score={riskAssessment.risk_score} color={cfg.color} />
+        <RiskGauge score={riskAssessment.risk_score} />
 
         {/* Tier progress bars */}
         <div className="mt-4 pt-3 border-t border-zinc-800/80">
@@ -117,7 +117,7 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
                 key={tier}
                 className="flex-1 h-1 rounded-full transition-all duration-300"
                 style={{
-                  background: band === tier ? RISK_CONFIG[tier].color : '#27272a',
+                  background: band === tier ? '#ffffff' : '#27272a',
                 }}
               />
             ))}
@@ -129,17 +129,17 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
       </div>
 
       {/* Attribution Card */}
-      <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
         <div className="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-800/80">
           <Building2 size={15} className="text-zinc-400" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Entity Attribution</h3>
         </div>
         {attribution ? (
           <div>
-            <div className="text-xl font-bold text-zinc-100 tracking-tight">{attribution.exchange}</div>
+            <div className="text-xl font-bold text-white tracking-tight">{attribution.exchange}</div>
             <div className="font-mono text-xs text-zinc-400 mt-1 capitalize">{attribution.type}</div>
             {traceResult?.flags?.hops_to_exchange != null && (
-              <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 bg-zinc-800/60 rounded-md border border-zinc-700/60 text-zinc-300">
+              <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 bg-zinc-900 rounded-md border border-zinc-700 text-zinc-300">
                 <Link size={11} className="text-zinc-400" />
                 Resolved in {traceResult.flags.hops_to_exchange} transaction hop(s)
               </div>
@@ -147,7 +147,7 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
           </div>
         ) : (
           <div>
-            <div className="text-zinc-300 font-medium text-xs">No centralized exchange off-ramp identified within trace depth.</div>
+            <div className="text-zinc-200 font-medium text-xs">No centralized exchange off-ramp identified within trace depth.</div>
             <div className="text-zinc-400 text-xs mt-1">
               {traceResult?.flags?.cross_chain_detected
                 ? 'Cross-chain bridge detected — assets bridged to an external blockchain ledger.'
@@ -158,7 +158,7 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
       </div>
 
       {/* Risk Indicators */}
-      <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 pb-2 border-b border-zinc-800/80">
           Identified Risk Indicators
         </h3>

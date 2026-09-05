@@ -1,5 +1,5 @@
 // src/components/Dashboard.jsx
-// Minimalist investigator stats dashboard with Chart.js
+// Black & White investigator stats dashboard with monochrome Chart.js
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -20,10 +20,10 @@ const CHART_DEFAULTS = {
   plugins: { 
     legend: { labels: { color: '#a1a1aa', font: { family: 'JetBrains Mono', size: 10 } } },
     tooltip: {
-      backgroundColor: '#18181b',
-      titleColor: '#f4f4f5',
+      backgroundColor: '#000000',
+      titleColor: '#ffffff',
       bodyColor: '#a1a1aa',
-      borderColor: '#27272a',
+      borderColor: '#3f3f46',
       borderWidth: 1,
       padding: 8,
       cornerRadius: 6,
@@ -47,14 +47,14 @@ function StatCard({ label, value, sub, icon: Icon }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-zinc-950 border border-zinc-800/90 rounded-lg p-4 text-center flex flex-col justify-between"
+      className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-center flex flex-col justify-between"
     >
       <div>
         <div className="flex items-center justify-center gap-1 text-[10.5px] font-mono text-zinc-400 uppercase tracking-wider mb-1">
           {Icon && <Icon size={12} className="text-zinc-400" />}
           <span>{label}</span>
         </div>
-        <div className="font-mono font-bold text-2xl text-zinc-100 mt-1">
+        <div className="font-mono font-bold text-2xl text-white mt-1">
           {value}
         </div>
       </div>
@@ -77,8 +77,9 @@ export default function Dashboard({ refreshKey }) {
     <div className="text-center text-zinc-400 text-xs py-10 font-mono">Loading dashboard metrics…</div>
   )
 
-  const riskColors = ['#34d399', '#fbbf24', '#fb923c', '#f87171']
-  const exchangeColors = ['#e4e4e7', '#a1a1aa', '#71717a', '#52525b', '#3f3f46']
+  // Pure Black & White Monochrome Grayscale Palette
+  const riskColors = ['#52525b', '#71717a', '#d4d4d8', '#ffffff']
+  const exchangeColors = ['#ffffff', '#e4e4e7', '#a1a1aa', '#71717a', '#3f3f46']
   const topTyp = Object.entries(stats.typology_distribution || {}).sort((a, b) => b[1] - a[1])[0]
   const topEx  = (stats.top_exchanges || [])[0]
 
@@ -98,7 +99,7 @@ export default function Dashboard({ refreshKey }) {
       data: stats.top_exchanges?.map(([, v]) => v) || [1],
       backgroundColor: exchangeColors,
       borderWidth: 1,
-      borderColor: '#18181b',
+      borderColor: '#000000',
     }],
   }
 
@@ -107,7 +108,7 @@ export default function Dashboard({ refreshKey }) {
     datasets: [{
       data: Object.values(stats.typology_distribution || { 'No data': 0 }),
       backgroundColor: '#71717a',
-      hoverBackgroundColor: '#a1a1aa',
+      hoverBackgroundColor: '#ffffff',
       borderRadius: 4,
       borderSkipped: false,
     }],
@@ -117,9 +118,9 @@ export default function Dashboard({ refreshKey }) {
     labels: ['Cross-chain detected', 'Single-chain only'],
     datasets: [{
       data: [stats.bridge_detected_count || 0, (stats.total_cases || 0) - (stats.bridge_detected_count || 0)],
-      backgroundColor: ['#fb923c', '#27272a'],
+      backgroundColor: ['#ffffff', '#27272a'],
       borderWidth: 1,
-      borderColor: '#18181b',
+      borderColor: '#000000',
     }],
   }
 
@@ -133,9 +134,9 @@ export default function Dashboard({ refreshKey }) {
   return (
     <div className="space-y-4 font-sans">
       {useMock && (
-        <div className="text-[11px] font-mono text-amber-400/90 bg-amber-950/20 border border-amber-900/40 px-3 py-1.5 rounded-md inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-          Offline fallback — showing sample aggregated metrics
+        <div className="text-[11px] font-mono text-zinc-300 bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-md inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          Offline fallback — displaying illustrative metrics
         </div>
       )}
 
@@ -153,7 +154,7 @@ export default function Dashboard({ refreshKey }) {
 
       {/* Charts grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
           <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
             Cases by Risk Band
           </div>
@@ -166,7 +167,7 @@ export default function Dashboard({ refreshKey }) {
           />
         </div>
 
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
           <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
             Exchange Attributions
           </div>
@@ -176,7 +177,7 @@ export default function Dashboard({ refreshKey }) {
           />
         </div>
 
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
           <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
             Typology Distribution
           </div>
@@ -189,7 +190,7 @@ export default function Dashboard({ refreshKey }) {
           />
         </div>
 
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
           <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
             Cross-Chain Bridge Activity
           </div>

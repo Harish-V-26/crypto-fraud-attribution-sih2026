@@ -67,13 +67,13 @@ export default function RealtimeTicker() {
         
         {/* Left: Stream Indicator & Currency Switch */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-text-muted">
+          <div className="flex items-center gap-1.5 text-zinc-400">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
                 wsStatus === 'connected'
-                  ? 'bg-emerald-400'
+                  ? 'bg-white shadow-[0_0_5px_rgba(255,255,255,0.8)]'
                   : wsStatus === 'connecting'
-                  ? 'bg-amber-400 animate-pulse'
+                  ? 'bg-zinc-400 animate-pulse'
                   : 'bg-zinc-600'
               }`}
             />
@@ -104,12 +104,8 @@ export default function RealtimeTicker() {
             return (
               <div key={coin.symbol} className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="text-zinc-400 font-medium">{coin.symbol}</span>
-                <span className="text-zinc-200 font-medium">{priceStr}</span>
-                <span
-                  className={`text-[9.5px] font-semibold ${
-                    isPos ? 'text-emerald-400' : 'text-zinc-400'
-                  }`}
-                >
+                <span className="text-zinc-100 font-medium">{priceStr}</span>
+                <span className="text-[9.5px] font-mono text-zinc-400">
                   {isPos ? '+' : ''}{coin.change_24h}%
                 </span>
               </div>

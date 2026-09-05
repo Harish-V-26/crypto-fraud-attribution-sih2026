@@ -78,7 +78,7 @@ export default function App() {
   const graphData = caseData?.trace_result?.graph
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-zinc-100 antialiased">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-zinc-800 selection:text-white antialiased">
       <Header />
       <RealtimeTicker />
 
@@ -92,8 +92,8 @@ export default function App() {
           />
           <IntakeForm onResult={handleResult} onDemoMode={() => setDemoMode(true)} />
           {demoMode && (
-            <div className="mt-3 text-xs font-mono text-amber-400/90 flex items-center gap-2 bg-amber-950/20 border border-amber-900/40 px-3 py-2 rounded-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <div className="mt-3 text-xs font-mono text-zinc-300 flex items-center gap-2 bg-zinc-900 border border-zinc-700 px-3 py-2 rounded-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               Demo mode active — backend offline. Displaying illustrative trace data.
             </div>
           )}
@@ -112,10 +112,10 @@ export default function App() {
               className="space-y-4"
             >
               {/* Case header */}
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-900/60 border border-zinc-800 p-4 rounded-lg">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950 border border-zinc-800 p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-zinc-500 uppercase">Case Reference</span>
-                  <span className="font-mono text-sm font-semibold text-zinc-100 bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-700/60">
+                  <span className="text-xs font-mono text-zinc-400 uppercase">Case Reference</span>
+                  <span className="font-mono text-sm font-semibold text-white bg-zinc-900 px-2.5 py-1 rounded border border-zinc-700">
                     {caseData.case_id}
                   </span>
                 </div>
@@ -131,25 +131,25 @@ export default function App() {
                       </span>
                     )
                   })()}
-                  <span className="text-xs font-mono text-zinc-400 bg-zinc-800/50 border border-zinc-800 px-2 py-1 rounded-md">
+                  <span className="text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 px-2 py-1 rounded-md">
                     {(caseData.chain || 'eth').toUpperCase()}
                   </span>
-                  <span className="text-xs font-sans text-zinc-400 bg-zinc-800/50 border border-zinc-800 px-2.5 py-1 rounded-md">
+                  <span className="text-xs font-sans text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md">
                     {caseData.complaint_category}
                   </span>
                 </div>
               </div>
 
               {/* Tab bar */}
-              <div className="flex gap-1 bg-zinc-900/80 border border-zinc-800/90 rounded-lg p-1 overflow-x-auto">
+              <div className="flex gap-1 bg-zinc-950 border border-zinc-800 rounded-lg p-1 overflow-x-auto">
                 {RESULT_TABS.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex-1 min-w-max py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                       activeTab === tab.id
-                        ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                        ? 'bg-white text-black font-semibold shadow-sm'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                     }`}
                   >
                     {tab.label}

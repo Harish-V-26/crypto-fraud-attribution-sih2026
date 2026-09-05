@@ -298,7 +298,7 @@ export default function LiveMonitor() {
 
       {/* Error */}
       {error && (
-        <div className="text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 rounded-lg p-3 mb-3">
+        <div className="text-xs text-zinc-200 bg-zinc-900 border border-zinc-700 rounded-lg p-3 mb-3 font-mono">
           {error}
         </div>
       )}
@@ -306,7 +306,7 @@ export default function LiveMonitor() {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-6 text-text-dim text-xs font-mono gap-2">
-          <Loader2 size={14} className="animate-spin" />
+          <Loader2 size={14} className="animate-spin text-white" />
           <span>Querying on-chain node…</span>
         </div>
       )}
@@ -373,20 +373,22 @@ export default function LiveMonitor() {
           {/* Pre-check Display */}
           {activeTab === 'precheck' && (
             <div
-              className={`p-4 rounded-lg border ${
+              className={`p-4 rounded-lg border font-mono ${
                 result.flagged
-                  ? 'bg-rose-950/20 border-rose-900/40 text-rose-200'
-                  : 'bg-emerald-950/20 border-emerald-900/40 text-emerald-200'
+                  ? 'bg-zinc-900 border-white text-white'
+                  : 'bg-zinc-950 border-zinc-700 text-zinc-200'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-xs font-medium">
-                  {result.flagged ? <ShieldAlert size={16} className="text-rose-400" /> : <ShieldCheck size={16} className="text-emerald-400" />}
+                  {result.flagged ? <ShieldAlert size={16} className="text-white" /> : <ShieldCheck size={16} className="text-zinc-400" />}
                   <span>{result.flagged ? 'Flagged — Elevated Risk Probability' : 'Cleared — Normal Behavioral Pattern'}</span>
                 </div>
-                <span className="font-mono text-xs">Risk: {result.pre_confirmation_risk_score}/100</span>
+                <span className="font-mono text-xs px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
+                  Risk: {result.pre_confirmation_risk_score}/100
+                </span>
               </div>
-              <p className="text-xs text-text-dim leading-relaxed">{result.recommendation}</p>
+              <p className="text-xs text-zinc-400 leading-relaxed font-sans">{result.recommendation}</p>
             </div>
           )}
 

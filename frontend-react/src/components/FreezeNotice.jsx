@@ -235,8 +235,8 @@ export default function FreezeNotice({ caseData }) {
       </div>
 
       {generated && (
-        <div className="mb-3 text-xs text-emerald-400 font-mono flex items-center gap-1.5 bg-emerald-950/20 border border-emerald-900/40 px-3 py-1.5 rounded-md">
-          <CheckCheck size={13} /> PDF generated and saved as FREEZE-NOTICE-{caseData.case_id}.pdf
+        <div className="mb-3 text-xs text-white font-mono flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-md">
+          <CheckCheck size={13} className="text-white" /> PDF generated and saved as FREEZE-NOTICE-{caseData.case_id}.pdf
         </div>
       )}
 

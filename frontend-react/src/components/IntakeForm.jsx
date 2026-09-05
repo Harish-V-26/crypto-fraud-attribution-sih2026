@@ -129,8 +129,8 @@ export default function IntakeForm({ onResult, onDemoMode }) {
       </form>
 
       {error && (
-        <div className="mt-4 flex items-center gap-2 text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 rounded-lg p-3">
-          <AlertCircle size={14} className="flex-shrink-0" />
+        <div className="mt-4 flex items-center gap-2 text-xs text-zinc-200 bg-zinc-900 border border-zinc-700 rounded-lg p-3 font-mono">
+          <AlertCircle size={14} className="flex-shrink-0 text-white" />
           <span>{error}</span>
         </div>
       )}

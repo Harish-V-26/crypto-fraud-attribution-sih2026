@@ -51,13 +51,13 @@ export default function Header() {
             <span
               className={`w-1.5 h-1.5 rounded-full ${
                 status === 'live'
-                  ? 'bg-emerald-400 live-dot'
+                  ? 'bg-white live-dot shadow-[0_0_6px_rgba(255,255,255,0.8)]'
                   : status === 'checking'
-                  ? 'bg-amber-400 animate-pulse'
-                  : 'bg-zinc-500'
+                  ? 'bg-zinc-400 animate-pulse'
+                  : 'bg-zinc-700'
               }`}
             />
-            <span className="text-[11px] text-zinc-300">
+            <span className="text-[11px] text-zinc-300 font-mono">
               {status === 'live' ? `Engine v${version}` : status === 'checking' ? 'Syncing...' : 'Offline'}
             </span>
           </div>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -116,13 +116,6 @@
   .leg-shape-icosa { clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%); }
   .leg-shape-octa   { clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); border-radius:0; }
 
-  /* ───────── EMPTY STATE ───────── */
-  #emptyState {
-    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-    text-align:center; color:#8a999e; z-index:5; pointer-events:none;
-  }
-  #emptyState .es-title { font-size:22px; font-weight:600; color:#4fb3a9; margin-bottom:8px; }
-  #emptyState .es-sub { font-size:13px; }
 </style>
 </head>
 <body>
@@ -207,11 +200,6 @@
   <span id="scrubPct">— / —</span>
 </div>
 
-<!-- EMPTY STATE -->
-<div id="emptyState">
-  <div class="es-title">◈ Blockchain Universe Active</div>
-  <div class="es-sub">Select a traced case and press ▶ Play to begin the simulation</div>
-</div>
 
 <!-- THREE.JS + ORBITCONTROLS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

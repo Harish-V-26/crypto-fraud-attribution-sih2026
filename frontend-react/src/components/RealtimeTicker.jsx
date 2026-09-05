@@ -39,14 +39,14 @@ export default function RealtimeTicker() {
     )
 
     const interval = setInterval(() => {
-      if (wsStatus !== 'connected') initFetch()
-    }, 10000)
+      initFetch()
+    }, 15000)
 
     return () => {
       socket.close()
       clearInterval(interval)
     }
-  }, [wsStatus])
+  }, [])
 
   const assets = marketData?.assets ? Object.values(marketData.assets) : [
     { symbol: 'BTC', price_usd: 79620, price_inr: 6911016, change_24h: -1.65 },

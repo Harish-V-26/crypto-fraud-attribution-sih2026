@@ -93,68 +93,85 @@ export async function fetchLiveInteractions(limit = 40, category = 'all') {
 }
 
 /**
- * Connect to real-time WebSocket feed with automatic reconnection
+ * Shared singleton WebSocket connection with multi-subscriber support
  */
-export function connectRealtimeWebSocket(onMessage, onStatusChange) {
+let sharedWs = null
+let sharedStatus = 'disconnected'
+const messageSubscribers = new Set()
+const statusSubscribers = new Set()
+let reconnectTimer = null
+
+function initSharedWebSocket() {
+  if (typeof window === 'undefined') return
+  if (sharedWs && (sharedWs.readyState === WebSocket.OPEN || sharedWs.readyState === WebSocket.CONNECTING)) {
+    return
+  }
+
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  // In dev, backend runs on port 8000
-  const host = window.location.port === '5173' 
-    ? `${window.location.hostname}:8000` 
+  const host = window.location.port === '5173'
+    ? `${window.location.hostname}:8000`
     : window.location.host
   const wsUrl = `${protocol}//${host}/api/ws/realtime`
 
-  let ws = null
-  let isClosed = false
-  let reconnectTimer = null
+  try {
+    sharedStatus = 'connecting'
+    statusSubscribers.forEach(cb => cb('connecting'))
+    sharedWs = new WebSocket(wsUrl)
 
-  function connect() {
-    if (isClosed) return
-    try {
-      ws = new WebSocket(wsUrl)
-      if (onStatusChange) onStatusChange('connecting')
+    sharedWs.onopen = () => {
+      sharedStatus = 'connected'
+      statusSubscribers.forEach(cb => cb('connected'))
+    }
 
-      ws.onopen = () => {
-        if (onStatusChange) onStatusChange('connected')
-      }
-
-      ws.onmessage = (evt) => {
-        try {
-          const data = JSON.parse(evt.data)
-          if (onMessage) onMessage(data)
-        } catch (err) {
-          console.error('WS parse error:', err)
-        }
-      }
-
-      ws.onerror = () => {
-        if (onStatusChange) onStatusChange('error')
-      }
-
-      ws.onclose = () => {
-        if (onStatusChange) onStatusChange('disconnected')
-        if (!isClosed) {
-          reconnectTimer = setTimeout(connect, 3000)
-        }
-      }
-    } catch (e) {
-      if (onStatusChange) onStatusChange('error')
-      if (!isClosed) {
-        reconnectTimer = setTimeout(connect, 3000)
+    sharedWs.onmessage = (evt) => {
+      try {
+        const data = JSON.parse(evt.data)
+        messageSubscribers.forEach(cb => cb(data))
+      } catch (err) {
+        console.error('WS parse error:', err)
       }
     }
+
+    sharedWs.onerror = () => {
+      sharedStatus = 'error'
+      statusSubscribers.forEach(cb => cb('error'))
+    }
+
+    sharedWs.onclose = () => {
+      sharedStatus = 'disconnected'
+      statusSubscribers.forEach(cb => cb('disconnected'))
+      sharedWs = null
+      if (messageSubscribers.size > 0 || statusSubscribers.size > 0) {
+        if (reconnectTimer) clearTimeout(reconnectTimer)
+        reconnectTimer = setTimeout(initSharedWebSocket, 3000)
+      }
+    }
+  } catch (err) {
+    sharedStatus = 'error'
+    statusSubscribers.forEach(cb => cb('error'))
+    if (reconnectTimer) clearTimeout(reconnectTimer)
+    reconnectTimer = setTimeout(initSharedWebSocket, 3000)
+  }
+}
+
+export function connectRealtimeWebSocket(onMessage, onStatusChange) {
+  if (onMessage) messageSubscribers.add(onMessage)
+  if (onStatusChange) {
+    statusSubscribers.add(onStatusChange)
+    // Immediately emit current status
+    onStatusChange(sharedStatus)
   }
 
-  connect()
+  initSharedWebSocket()
 
   return {
     close: () => {
-      isClosed = true
-      if (reconnectTimer) clearTimeout(reconnectTimer)
-      if (ws) ws.close()
+      if (onMessage) messageSubscribers.delete(onMessage)
+      if (onStatusChange) statusSubscribers.delete(onStatusChange)
     },
     sendPing: () => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send('ping')
+      if (sharedWs && sharedWs.readyState === WebSocket.OPEN) {
+        sharedWs.send('ping')
       }
     }
   }

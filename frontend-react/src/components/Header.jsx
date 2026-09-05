@@ -10,9 +10,26 @@ export default function Header() {
   const [version, setVersion] = useState('2.0')
 
   useEffect(() => {
-    checkHealth()
-      .then(d => { setStatus('live'); setVersion(d.version || '2.0') })
-      .catch(() => setStatus('offline'))
+    let isMounted = true
+    const verify = () => {
+      checkHealth()
+        .then(d => {
+          if (isMounted) {
+            setStatus('live')
+            setVersion(d.version || '2.0')
+          }
+        })
+        .catch(() => {
+          if (isMounted) setStatus('offline')
+        })
+    }
+
+    verify()
+    const timer = setInterval(verify, 4000)
+    return () => {
+      isMounted = false
+      clearInterval(timer)
+    }
   }, [])
 
   return (

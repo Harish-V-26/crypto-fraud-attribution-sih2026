@@ -204,7 +204,7 @@ async def get_live_gas_and_fees() -> Dict[str, Any]:
 
     # 1. Fetch Bitcoin fee recommendations from Mempool.space
     try:
-        async with httpx.AsyncClient(timeout=4.0) as client:
+        async with httpx.AsyncClient(timeout=1.5) as client:
             resp = await client.get(f"{MEMPOOL_SPACE_API}/v1/fees/recommended")
             if resp.status_code == 200:
                 fee_data = resp.json()
@@ -225,10 +225,10 @@ async def get_live_gas_and_fees() -> Dict[str, Any]:
         pass
 
     # 2. Fetch Ethereum Gas from Public RPC
-    for rpc_url in ETH_PUBLIC_RPCS:
+    for rpc_url in ETH_PUBLIC_RPCS[:2]:
         try:
             payload = {"jsonrpc": "2.0", "method": "eth_gasPrice", "params": [], "id": 1}
-            async with httpx.AsyncClient(timeout=3.5) as client:
+            async with httpx.AsyncClient(timeout=1.5) as client:
                 resp = await client.post(rpc_url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -252,7 +252,7 @@ async def get_live_gas_and_fees() -> Dict[str, Any]:
         "ethereum": eth_gas,
         "bitcoin": btc_fees,
     }
-    _set_cache("gas_and_fees", res, ttl_seconds=3.0)
+    _set_cache("gas_and_fees", res, ttl_seconds=10.0)
     return res
 
 
@@ -272,7 +272,7 @@ async def get_live_blockchain_status() -> Dict[str, Any]:
 
     # Bitcoin live status
     try:
-        async with httpx.AsyncClient(timeout=4.0) as client:
+        async with httpx.AsyncClient(timeout=1.5) as client:
             resp = await client.get(f"{MEMPOOL_SPACE_API}/blocks/tip/height")
             if resp.status_code == 200:
                 height = int(resp.text.strip())
@@ -289,10 +289,10 @@ async def get_live_blockchain_status() -> Dict[str, Any]:
         pass
 
     # Ethereum live status
-    for rpc_url in ETH_PUBLIC_RPCS:
+    for rpc_url in ETH_PUBLIC_RPCS[:2]:
         try:
             payload = {"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1}
-            async with httpx.AsyncClient(timeout=3.5) as client:
+            async with httpx.AsyncClient(timeout=1.5) as client:
                 resp = await client.post(rpc_url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -315,7 +315,7 @@ async def get_live_blockchain_status() -> Dict[str, Any]:
             "ethereum": eth_status,
         }
     }
-    _set_cache("blockchain_status", res, ttl_seconds=4.0)
+    _set_cache("blockchain_status", res, ttl_seconds=10.0)
     return res
 
 

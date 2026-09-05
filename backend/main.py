@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
-from typing import Optional, Literal, List
+from typing import Optional, Literal, List, Dict
 import time
 import json
 import sys
@@ -102,22 +102,30 @@ def log_hop(hop: int, addr: str, node_type: str, label: str, value):
 # ─── Live Connection & Interaction Hub ────────────────────────────────────────
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: Dict[WebSocket, asyncio.Lock] = {}
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.active_connections[websocket] = asyncio.Lock()
 
     def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+        self.active_connections.pop(websocket, None)
+
+    async def send_personal(self, websocket: WebSocket, message: dict):
+        lock = self.active_connections.get(websocket)
+        if not lock:
+            return
+        try:
+            async with lock:
+                await asyncio.wait_for(websocket.send_json(message), timeout=1.0)
+        except Exception:
+            self.disconnect(websocket)
 
     async def broadcast(self, message: dict):
-        for connection in list(self.active_connections):
-            try:
-                await connection.send_json(message)
-            except Exception:
-                self.disconnect(connection)
+        if not self.active_connections:
+            return
+        for ws in list(self.active_connections.keys()):
+            await self.send_personal(ws, message)
 
 ws_manager = ConnectionManager()
 
@@ -146,32 +154,38 @@ class LiveLogMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         elapsed = (time.perf_counter() - t0) * 1000
 
-        # Record structured live interaction telemetry for API routes
-        if request.url.path.startswith("/api") and not request.url.path.startswith("/api/live/interactions"):
+        # Record structured live interaction telemetry for API routes (exclude internal polling)
+        path = request.url.path
+        if path.startswith("/api") and not (
+            path.startswith("/api/live/interactions")
+            or path.startswith("/api/health")
+            or path.startswith("/api/ws")
+        ):
             client_ip = request.client.host if request.client else "127.0.0.1"
             interaction_record = {
                 "id": f"REQ-{int(time.time()*1000)}-{len(_INTERACTION_HISTORY)+1}",
                 "timestamp": _ts(),
                 "unix_time": time.time(),
                 "method": request.method,
-                "path": request.url.path,
+                "path": path,
                 "query": str(request.url.query) if request.url.query else "",
                 "client_ip": client_ip,
                 "status_code": response.status_code,
                 "elapsed_ms": round(elapsed, 1),
-                "category": _classify_path(request.url.path),
+                "category": _classify_path(path),
             }
             _INTERACTION_HISTORY.append(interaction_record)
             if len(_INTERACTION_HISTORY) > _MAX_INTERACTIONS:
                 _INTERACTION_HISTORY.pop(0)
 
-            try:
-                asyncio.create_task(ws_manager.broadcast({
-                    "type": "interaction",
-                    "interaction": interaction_record,
-                }))
-            except Exception:
-                pass
+            if ws_manager.active_connections:
+                try:
+                    asyncio.create_task(ws_manager.broadcast({
+                        "type": "interaction",
+                        "interaction": interaction_record,
+                    }))
+                except Exception:
+                    pass
 
         return response
 
@@ -443,39 +457,58 @@ async def get_live_interactions(limit: int = 50, category: Optional[str] = None)
     }
 
 
+async def global_heartbeat_loop():
+    """Single global background task to broadcast real-time metrics every 3 seconds."""
+    while True:
+        try:
+            if ws_manager.active_connections:
+                market, gas, status = await asyncio.gather(
+                    live_crypto.get_live_market_prices(),
+                    live_crypto.get_live_gas_and_fees(),
+                    live_crypto.get_live_blockchain_status(),
+                    return_exceptions=True,
+                )
+                payload = {
+                    "type": "heartbeat",
+                    "timestamp": int(time.time()),
+                    "market": market if isinstance(market, dict) else {},
+                    "gas": gas if isinstance(gas, dict) else {},
+                    "blockchain": status if isinstance(status, dict) else {},
+                }
+                await ws_manager.broadcast(payload)
+        except Exception:
+            pass
+        await asyncio.sleep(3.0)
+
+
+@app.on_event("startup")
+async def on_startup_event():
+    asyncio.create_task(global_heartbeat_loop())
+
+
 @app.websocket("/api/ws/realtime")
 async def websocket_realtime_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint broadcasting real-time market prices, gas fees,
-    network status, and live transaction pulses every 2.5 seconds.
+    network status, and live transaction pulses.
     """
     await ws_manager.connect(websocket)
     try:
+        # Immediately send snapshot of current cached telemetry so client gets data instantly
+        market = live_crypto._get_cache("market_prices") or {}
+        gas = live_crypto._get_cache("gas_and_fees") or {}
+        status = live_crypto._get_cache("blockchain_status") or {}
+        await ws_manager.send_personal(websocket, {
+            "type": "heartbeat",
+            "timestamp": int(time.time()),
+            "market": market,
+            "gas": gas,
+            "blockchain": status,
+        })
         while True:
-            # Gather fresh real-time metrics concurrently
-            market, gas, status = await asyncio.gather(
-                live_crypto.get_live_market_prices(),
-                live_crypto.get_live_gas_and_fees(),
-                live_crypto.get_live_blockchain_status(),
-                return_exceptions=True,
-            )
-            payload = {
-                "type": "heartbeat",
-                "timestamp": int(time.time()),
-                "market": market if isinstance(market, dict) else {},
-                "gas": gas if isinstance(gas, dict) else {},
-                "blockchain": status if isinstance(status, dict) else {},
-            }
-            await websocket.send_json(payload)
-            # Sleep between broadcasts or wait for incoming client ping
-            try:
-                # Check for incoming client message with timeout
-                msg = await asyncio.wait_for(websocket.receive_text(), timeout=2.5)
-                # Client may request on-demand refresh or echo
-                if msg == "ping":
-                    await websocket.send_json({"type": "pong", "timestamp": int(time.time())})
-            except asyncio.TimeoutError:
-                pass
+            msg = await websocket.receive_text()
+            if msg == "ping":
+                await ws_manager.send_personal(websocket, {"type": "pong", "timestamp": int(time.time())})
     except (WebSocketDisconnect, Exception):
         ws_manager.disconnect(websocket)
 

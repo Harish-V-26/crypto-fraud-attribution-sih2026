@@ -1,18 +1,18 @@
 // src/components/NetworkGraph.jsx
-// Interactive force-directed network graph for transaction flow visualization
+// Minimalist interactive force-directed network graph for transaction flow visualization
 
 import { useRef, useCallback, useEffect, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import { ZoomIn, ZoomOut, Maximize2, RefreshCw } from 'lucide-react'
 
-// Node type styles
+// Node type styles - minimalist palette
 const NODE_COLORS = {
-  source:   { fill: '#4fb3a9', stroke: '#2a4a47', label: '#0f1417' },
-  layering: { fill: '#5c6b70', stroke: '#3a454b', label: '#dfe6e8' },
-  mixer:    { fill: '#c85a4f', stroke: '#5a2f2a', label: '#fde8e7' },
-  exchange: { fill: '#d99a3f', stroke: '#5a4629', label: '#0f1417' },
-  bridge:   { fill: '#ff8844', stroke: '#6a3a20', label: '#0f1417' },
-  defi:     { fill: '#8899ff', stroke: '#2a3068', label: '#0f1417' },
+  source:   { fill: '#f4f4f5', stroke: '#71717a', label: '#09090b' },
+  layering: { fill: '#3f3f46', stroke: '#27272a', label: '#f4f4f5' },
+  mixer:    { fill: '#f87171', stroke: '#7f1d1d', label: '#f4f4f5' },
+  exchange: { fill: '#34d399', stroke: '#064e3b', label: '#09090b' },
+  bridge:   { fill: '#fb923c', stroke: '#7c2d12', label: '#09090b' },
+  defi:     { fill: '#a78bfa', stroke: '#4c1d95', label: '#09090b' },
 }
 
 const EDGE_LABELS = {
@@ -94,10 +94,10 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     const isHovered = hoveredNode?.id === node.id
     const r = isSelected ? 22 : (isHovered ? 19 : 16)
 
-    // Glow effect for selected/hovered
+    // Subtle glow effect for selected/hovered
     if (isSelected || isHovered) {
       ctx.shadowColor = config.fill
-      ctx.shadowBlur = isSelected ? 20 : 12
+      ctx.shadowBlur = isSelected ? 16 : 8
     } else {
       ctx.shadowBlur = 0
     }
@@ -132,14 +132,14 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     ctx.fillStyle = config.fill
     ctx.fill()
     ctx.strokeStyle = isSelected ? '#ffffff' : config.stroke
-    ctx.lineWidth = isSelected ? 2.5 : 1.5
+    ctx.lineWidth = isSelected ? 2 : 1
     ctx.stroke()
     ctx.shadowBlur = 0
 
     // Label
     const label = node.label?.length > 12 ? node.label.slice(0, 12) + '…' : node.label
     const fontSize = Math.max(8, 11 / globalScale)
-    ctx.font = `600 ${fontSize}px IBM Plex Mono, monospace`
+    ctx.font = `600 ${fontSize}px JetBrains Mono, monospace`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = config.label
@@ -153,8 +153,8 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     if (!start || !end) return
 
     ctx.beginPath()
-    ctx.strokeStyle = '#3a454b'
-    ctx.lineWidth = 1.5
+    ctx.strokeStyle = '#27272a'
+    ctx.lineWidth = 1.2
     ctx.setLineDash([])
     ctx.moveTo(start.x, start.y)
     ctx.lineTo(end.x, end.y)
@@ -165,14 +165,14 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     const dy = end.y - start.y
     const dist = Math.sqrt(dx * dx + dy * dy)
     if (dist < 1) return
-    const arrowLen = 8
+    const arrowLen = 7
     const arrowAngle = 0.4
     const angle = Math.atan2(dy, dx)
-    const arrowX = end.x - (dx / dist) * 20
-    const arrowY = end.y - (dy / dist) * 20
+    const arrowX = end.x - (dx / dist) * 19
+    const arrowY = end.y - (dy / dist) * 19
 
     ctx.beginPath()
-    ctx.fillStyle = '#4fb3a9'
+    ctx.fillStyle = '#71717a'
     ctx.moveTo(arrowX, arrowY)
     ctx.lineTo(
       arrowX - arrowLen * Math.cos(angle - arrowAngle),
@@ -187,10 +187,10 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
 
   if (!graphData || fgData.nodes.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[420px] bg-panel-alt rounded-lg border border-border border-dashed">
-        <div className="text-center text-text-dim">
-          <div className="text-4xl mb-3">◈</div>
-          <div className="text-sm">Network graph will appear here after tracing</div>
+      <div className="flex items-center justify-center h-[420px] bg-zinc-950 rounded-lg border border-zinc-800 border-dashed">
+        <div className="text-center text-zinc-400 font-mono text-xs">
+          <div className="text-2xl mb-2 text-zinc-400">◈</div>
+          <div>Network graph will render here upon case investigation</div>
         </div>
       </div>
     )
@@ -199,18 +199,18 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
   return (
     <div className="relative">
       {/* Toolbar */}
-      <div className="absolute top-3 right-3 z-10 flex gap-1.5">
+      <div className="absolute top-3 right-3 z-10 flex gap-1">
         {[
-          { icon: <ZoomIn size={14} />, action: () => graphRef.current?.zoom(graphRef.current.zoom() * 1.3, 300), tip: 'Zoom in' },
-          { icon: <ZoomOut size={14} />, action: () => graphRef.current?.zoom(graphRef.current.zoom() * 0.77, 300), tip: 'Zoom out' },
-          { icon: <Maximize2 size={14} />, action: () => graphRef.current?.zoomToFit(400, 40), tip: 'Fit to view' },
-          { icon: <RefreshCw size={14} />, action: () => { setSelectedNode(null); graphRef.current?.zoomToFit(400, 40) }, tip: 'Reset' },
+          { icon: <ZoomIn size={13} />, action: () => graphRef.current?.zoom(graphRef.current.zoom() * 1.3, 300), tip: 'Zoom in' },
+          { icon: <ZoomOut size={13} />, action: () => graphRef.current?.zoom(graphRef.current.zoom() * 0.77, 300), tip: 'Zoom out' },
+          { icon: <Maximize2 size={13} />, action: () => graphRef.current?.zoomToFit(400, 40), tip: 'Fit view' },
+          { icon: <RefreshCw size={13} />, action: () => { setSelectedNode(null); graphRef.current?.zoomToFit(400, 40) }, tip: 'Reset' },
         ].map(({ icon, action, tip }, i) => (
           <button
             key={i}
             onClick={action}
             title={tip}
-            className="p-1.5 rounded bg-panel-alt/90 border border-border text-text-dim hover:text-accent hover:border-accent transition-colors"
+            className="p-1.5 rounded-md bg-zinc-900/90 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors shadow-sm"
           >
             {icon}
           </button>
@@ -218,23 +218,23 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
       </div>
 
       {/* Legend */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 bg-zinc-950/80 p-2 rounded-md border border-zinc-800/80 backdrop-blur-xs">
         {Object.entries(EDGE_LABELS).map(([type, label]) => (
           <div key={type} className="flex items-center gap-1.5 text-[10px] font-mono">
             <span style={{ color: NODE_COLORS[type].fill }}>{label.split(' ')[0]}</span>
-            <span className="text-text-dim capitalize">{type}</span>
+            <span className="text-zinc-400 capitalize">{type}</span>
           </div>
         ))}
       </div>
 
       {/* Graph */}
-      <div ref={containerRef} className="graph-canvas-wrapper overflow-hidden rounded-lg border border-border bg-panel-alt">
+      <div ref={containerRef} className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
         <ForceGraph2D
           ref={graphRef}
           graphData={fgData}
           width={dimensions.width}
           height={dimensions.height}
-          backgroundColor="#1c252a"
+          backgroundColor="#09090b"
           nodeCanvasObject={paintNode}
           nodeCanvasObjectMode={() => 'replace'}
           linkCanvasObject={paintLink}
@@ -251,18 +251,18 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
 
       {/* Selected node info */}
       {selectedNode && (
-        <div className="mt-3 p-3 bg-panel-alt border border-accent/40 rounded-lg text-sm">
+        <div className="mt-3 p-3 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono">
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-semibold text-accent">{selectedNode.label}</span>
-              <span className="ml-2 text-xs text-text-dim font-mono capitalize">({selectedNode.type})</span>
+              <span className="font-semibold text-zinc-100">{selectedNode.label}</span>
+              <span className="ml-2 text-zinc-400 capitalize">({selectedNode.type})</span>
             </div>
             <button
               onClick={() => setSelectedNode(null)}
-              className="text-text-dim hover:text-text-main text-xs"
+              className="text-zinc-400 hover:text-zinc-200"
             >✕</button>
           </div>
-          <div className="font-mono text-xs text-text-dim mt-1 break-all">{selectedNode.id}</div>
+          <div className="text-[11px] text-zinc-400 mt-1 break-all">{selectedNode.id}</div>
         </div>
       )}
     </div>

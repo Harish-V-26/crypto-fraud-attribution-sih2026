@@ -1,24 +1,20 @@
 // src/components/LiveMonitor.jsx
-// Multi-chain Real-Time Blockchain Explorer & Live Forensic Monitor
+// Minimalist Multi-chain Blockchain Explorer & Pre-Confirmation Screener
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Wifi,
   Search,
   Loader2,
-  AlertTriangle,
-  CheckCircle2,
   Database,
   Hash,
   Zap,
   Activity,
   Radio,
-  Flame,
-  Clock,
-  ArrowUpRight,
+  ArrowRight,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Layers
 } from 'lucide-react'
 import {
   fetchAddressMetrics,
@@ -31,24 +27,23 @@ import {
   simulatePreConfirmationCheck,
 } from '../lib/ethers'
 
-function StatCard({ label, value, sub, color, icon: Icon }) {
+function MinimalStatCard({ label, value, sub }) {
   return (
-    <div className="bg-panel-alt rounded-lg p-3.5 border border-border">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        {Icon && <Icon size={12} className="text-text-dim" />}
-        <span className="text-[11px] text-text-dim font-mono">{label}</span>
+    <div className="bg-panel-alt/50 border border-border/70 rounded-lg p-3.5">
+      <div className="text-[10.5px] uppercase tracking-wider text-text-muted font-mono mb-1">
+        {label}
       </div>
-      <div className="font-mono font-semibold text-sm break-all" style={{ color: color || '#dfe6e8' }}>
+      <div className="font-mono text-sm font-semibold text-text-main break-all">
         {value}
       </div>
-      {sub && <div className="text-[10.5px] text-text-dim mt-1 font-mono">{sub}</div>}
+      {sub && <div className="text-[10px] text-text-dim mt-1 font-mono">{sub}</div>}
     </div>
   )
 }
 
 export default function LiveMonitor() {
-  const [activeTab, setActiveTab] = useState('address') // 'address' | 'block' | 'mempool' | 'tx' | 'precheck'
-  const [chain, setChain] = useState('ethereum') // 'ethereum' | 'bitcoin'
+  const [activeTab, setActiveTab] = useState('address')
+  const [chain, setChain] = useState('ethereum')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
@@ -60,7 +55,7 @@ export default function LiveMonitor() {
   const [preTo, setPreTo] = useState('')
   const [preValue, setPreValue] = useState('')
 
-  const inputCls = 'bg-panel-alt border border-border text-text-main font-mono text-sm px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-accent w-full'
+  const inputCls = 'bg-panel-alt/60 border border-border text-text-main font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-zinc-500 transition-colors w-full placeholder:text-zinc-600'
 
   const run = useCallback(async (fn) => {
     setLoading(true)
@@ -76,16 +71,13 @@ export default function LiveMonitor() {
     }
   }, [])
 
-  // 1. Real-time address query via live backend public RPCs & explorers
   async function queryAddress() {
     if (!addressInput.trim()) return
     await run(async () => {
-      const res = await fetchAddressMetrics(chain, addressInput.trim())
-      return res
+      return await fetchAddressMetrics(chain, addressInput.trim())
     })
   }
 
-  // 2. Real-time network & block stats query
   async function queryBlockStatus() {
     await run(async () => {
       const [status, gas] = await Promise.all([
@@ -96,9 +88,9 @@ export default function LiveMonitor() {
       const chainGas = gas?.[chain] || {}
       return {
         Chain: chain.toUpperCase(),
-        'Block Height': chainStatus.block_height ? `#${chainStatus.block_height}` : 'Live Tip',
-        'Tip Hash': chainStatus.tip_hash || 'Verified Mainnet',
-        'Data Source': chainStatus.source || 'Live RPC / Explorer',
+        'Block Height': chainStatus.block_height ? `#${chainStatus.block_height}` : 'Latest Verified',
+        'Tip Hash': chainStatus.tip_hash || 'Mainnet Tip',
+        'Telemetry Provider': chainStatus.source || 'Public Zero-Key Node',
         ...(chain === 'ethereum'
           ? {
               'Base Gas': `${chainGas.base_fee || 14} Gwei`,
@@ -116,15 +108,13 @@ export default function LiveMonitor() {
     })
   }
 
-  // 3. Real-time live mempool stream
   async function queryLiveMempool() {
     await run(async () => {
-      const res = await fetchLiveMempool(chain, 15)
+      const res = await fetchLiveMempool(chain, 12)
       return res.mempool || []
     })
   }
 
-  // 4. Transaction lookup
   async function queryTx() {
     if (!txInput.trim()) return
     await run(async () => {
@@ -132,84 +122,74 @@ export default function LiveMonitor() {
     })
   }
 
-  // 5. Pre-confirmation ML Screener
   async function runPreCheck() {
     const check = simulatePreConfirmationCheck(preFrom.trim(), preTo.trim(), preValue.trim())
     setResult(check)
   }
 
   const tabs = [
-    { id: 'address', label: 'Address Explorer', icon: Database },
-    { id: 'block', label: 'Network & Gas', icon: Activity },
-    { id: 'mempool', label: 'Live Mempool', icon: Radio },
-    { id: 'tx', label: 'Tx Lookup', icon: Hash },
-    { id: 'precheck', label: 'Pre-Confirm ML', icon: Zap },
+    { id: 'address', label: 'Address' },
+    { id: 'block', label: 'Network & Gas' },
+    { id: 'mempool', label: 'Mempool' },
+    { id: 'tx', label: 'Transaction' },
+    { id: 'precheck', label: 'Pre-Confirm ML' },
   ]
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-panel border border-border rounded-lg p-5"
-    >
-      {/* Header */}
+    <div className="bg-panel border border-border/80 rounded-xl p-5 sm:p-6 shadow-minimal">
+      
+      {/* Top Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <Wifi size={16} className="text-accent" />
-          <h3 className="font-semibold text-sm text-text-dim">Multi-Chain Live Monitor</h3>
-          <span className="text-[10.5px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-2 py-0.5 rounded flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live Zero-Key RPCs
-          </span>
-        </div>
-
-        {/* Chain selector */}
-        <div className="flex items-center gap-1 bg-panel-alt border border-border rounded-lg p-0.5 text-xs font-mono">
+        {/* Chain Toggle */}
+        <div className="flex items-center p-0.5 rounded-lg bg-panel-alt/80 border border-border text-xs font-mono">
           <button
             onClick={() => { setChain('ethereum'); setResult(null); setError(null) }}
-            className={`px-3 py-1 rounded transition-colors ${
-              chain === 'ethereum' ? 'bg-purple-900/60 text-purple-200 font-semibold' : 'text-text-dim hover:text-text-main'
+            className={`px-3 py-1 rounded-md transition-all ${
+              chain === 'ethereum'
+                ? 'bg-zinc-100 text-zinc-950 font-medium'
+                : 'text-text-dim hover:text-white'
             }`}
           >
             Ethereum
           </button>
           <button
             onClick={() => { setChain('bitcoin'); setResult(null); setError(null) }}
-            className={`px-3 py-1 rounded transition-colors ${
-              chain === 'bitcoin' ? 'bg-amber-900/60 text-amber-200 font-semibold' : 'text-text-dim hover:text-text-main'
+            className={`px-3 py-1 rounded-md transition-all ${
+              chain === 'bitcoin'
+                ? 'bg-zinc-100 text-zinc-950 font-medium'
+                : 'text-text-dim hover:text-white'
             }`}
           >
             Bitcoin
           </button>
         </div>
+
+        {/* Feature Tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id)
+                setResult(null)
+                setError(null)
+                if (tab.id === 'block') queryBlockStatus()
+                if (tab.id === 'mempool') queryLiveMempool()
+              }}
+              className={`text-xs font-mono px-3 py-1 rounded-md transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
+                  : 'text-text-dim hover:text-white hover:bg-panel-alt'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-panel-alt rounded-lg p-1 border border-border overflow-x-auto">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => {
-              setActiveTab(id)
-              setResult(null)
-              setError(null)
-              if (id === 'block') queryBlockStatus()
-              if (id === 'mempool') queryLiveMempool()
-            }}
-            className={`flex-1 min-w-max flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs rounded-md font-medium transition-all ${
-              activeTab === id
-                ? 'bg-accent text-bg font-semibold'
-                : 'text-text-dim hover:text-text-main'
-            }`}
-          >
-            <Icon size={12} />
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Input area */}
-      <div className="mb-4 space-y-2">
+      {/* Inputs */}
+      <div className="mb-4">
         {activeTab === 'address' && (
           <div>
             <div className="flex gap-2">
@@ -219,57 +199,54 @@ export default function LiveMonitor() {
                 onChange={(e) => setAddressInput(e.target.value)}
                 placeholder={
                   chain === 'ethereum'
-                    ? '0xDe0B295669a9FD93d5F28D9Ec85E40f4cb697BA'
+                    ? '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
                     : '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
                 }
               />
               <button
                 onClick={queryAddress}
                 disabled={loading || !addressInput}
-                className="flex items-center gap-1.5 bg-accent text-bg font-semibold text-sm px-4 py-2 rounded-md hover:brightness-110 disabled:opacity-50 whitespace-nowrap transition-all"
+                className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
               >
-                {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-                Live Lookup
+                {loading ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
+                <span>Inspect</span>
               </button>
             </div>
-            <div className="flex items-center gap-2 mt-2 text-[11px] text-text-dim font-mono">
+            <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-text-muted">
               <span>Quick tests:</span>
               <button
                 onClick={() => {
-                  const addr = chain === 'ethereum' ? '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' : 'bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97'
-                  setAddressInput(addr)
+                  setAddressInput(chain === 'ethereum' ? '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' : 'bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97')
                 }}
-                className="text-accent hover:underline"
+                className="text-zinc-300 hover:underline"
               >
-                {chain === 'ethereum' ? 'vitalik.eth' : 'Binance Cold Wallet'}
+                {chain === 'ethereum' ? 'vitalik.eth' : 'Binance Cold Storage'}
               </button>
             </div>
           </div>
         )}
 
         {activeTab === 'block' && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-text-dim">Live network telemetry & fee estimation:</span>
+          <div className="flex items-center justify-between text-xs text-text-dim">
+            <span>Direct live telemetry from public RPC & mempool node:</span>
             <button
               onClick={queryBlockStatus}
               disabled={loading}
-              className="flex items-center gap-1.5 bg-panel-alt border border-border text-accent text-xs font-semibold px-3 py-1.5 rounded-md hover:bg-panel transition-all"
+              className="text-xs font-mono text-zinc-200 border border-border px-2.5 py-1 rounded-md hover:bg-panel-alt transition-colors"
             >
-              {loading ? <Loader2 size={12} className="animate-spin" /> : <Activity size={12} />}
-              Refresh Telemetry
+              Refresh Status
             </button>
           </div>
         )}
 
         {activeTab === 'mempool' && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-text-dim">Streaming real unconfirmed & latest block transactions:</span>
+          <div className="flex items-center justify-between text-xs text-text-dim">
+            <span>Streaming live unconfirmed / latest block transactions:</span>
             <button
               onClick={queryLiveMempool}
               disabled={loading}
-              className="flex items-center gap-1.5 bg-panel-alt border border-border text-accent text-xs font-semibold px-3 py-1.5 rounded-md hover:bg-panel transition-all"
+              className="text-xs font-mono text-zinc-200 border border-border px-2.5 py-1 rounded-md hover:bg-panel-alt transition-colors"
             >
-              {loading ? <Loader2 size={12} className="animate-spin" /> : <Radio size={12} />}
               Fetch Fresh Txs
             </button>
           </div>
@@ -286,186 +263,144 @@ export default function LiveMonitor() {
             <button
               onClick={queryTx}
               disabled={loading || !txInput}
-              className="flex items-center gap-1.5 bg-accent text-bg font-semibold text-sm px-4 py-2 rounded-md hover:brightness-110 disabled:opacity-50 whitespace-nowrap transition-all"
+              className="bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
             >
-              {loading ? <Loader2 size={14} className="animate-spin" /> : <Hash size={14} />}
-              Verify Tx
+              {loading ? <Loader2 size={13} className="animate-spin" /> : 'Verify'}
             </button>
           </div>
         )}
 
         {activeTab === 'precheck' && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
-                <label className="text-[11px] text-text-dim mb-1 block font-mono">From Address</label>
+                <label className="text-[10.5px] font-mono text-text-muted mb-1 block">From Address</label>
                 <input className={inputCls} value={preFrom} onChange={(e) => setPreFrom(e.target.value)} placeholder="0x sender…" />
               </div>
               <div>
-                <label className="text-[11px] text-text-dim mb-1 block font-mono">To Address</label>
+                <label className="text-[10.5px] font-mono text-text-muted mb-1 block">To Address</label>
                 <input className={inputCls} value={preTo} onChange={(e) => setPreTo(e.target.value)} placeholder="0x recipient…" />
               </div>
               <div>
-                <label className="text-[11px] text-text-dim mb-1 block font-mono">Value (ETH / BTC)</label>
-                <input className={inputCls} value={preValue} onChange={(e) => setPreValue(e.target.value)} placeholder="e.g. 15.5" type="number" />
+                <label className="text-[10.5px] font-mono text-text-muted mb-1 block">Value</label>
+                <input className={inputCls} value={preValue} onChange={(e) => setPreValue(e.target.value)} placeholder="Amount (e.g. 15)" type="number" />
               </div>
             </div>
             <button
               onClick={runPreCheck}
-              className="flex items-center gap-2 bg-accent text-bg font-semibold text-sm px-4 py-2 rounded-md hover:brightness-110 transition-all"
+              className="bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-4 py-2 rounded-lg transition-colors"
             >
-              <Zap size={14} /> Run Pre-Confirmation ML Check
+              Run Pre-Confirmation ML Heuristic
             </button>
           </div>
         )}
       </div>
 
-      {/* Error Message */}
+      {/* Error */}
       {error && (
-        <div className="flex items-start gap-2 text-sm text-red bg-red/10 border border-red/30 rounded-md px-3 py-2.5 mb-3">
-          <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
-          <span className="font-mono text-xs">{error}</span>
+        <div className="text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 rounded-lg p-3 mb-3">
+          {error}
         </div>
       )}
 
-      {/* Loading Indicator */}
+      {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center py-8 text-text-dim gap-2 text-xs font-mono">
-          <Loader2 size={16} className="animate-spin text-accent" />
-          Fetching live multi-chain data...
+        <div className="flex items-center justify-center py-6 text-text-dim text-xs font-mono gap-2">
+          <Loader2 size={14} className="animate-spin" />
+          <span>Querying on-chain node…</span>
         </div>
       )}
 
-      {/* Result Displays */}
+      {/* Results */}
       {result && !loading && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-          
-          {/* Address View */}
+        <div className="space-y-3 pt-2">
+          {/* Address Display */}
           {activeTab === 'address' && (
             <div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                <StatCard
-                  label="NATIVE BALANCE"
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <MinimalStatCard
+                  label="Balance"
                   value={`${result.balance_native ?? 0} ${chain === 'ethereum' ? 'ETH' : 'BTC'}`}
-                  color="#6fd196"
-                  icon={Activity}
                 />
-                <StatCard
-                  label="USD VALUE"
+                <MinimalStatCard
+                  label="USD Value"
                   value={`$${(result.balance_usd ?? 0).toLocaleString()}`}
-                  color="#dfe6e8"
                 />
-                <StatCard
-                  label="INR VALUE"
+                <MinimalStatCard
+                  label="INR Value"
                   value={`₹${(result.balance_inr ?? 0).toLocaleString('en-IN')}`}
-                  color="#4fb3a9"
                 />
-                <StatCard
-                  label="TX COUNT"
-                  value={result.tx_count ?? 0}
-                  sub={result.is_contract ? 'Smart Contract' : 'Standard EOA'}
-                  color="#38bdf8"
+                <MinimalStatCard
+                  label="Activity"
+                  value={`${result.tx_count ?? 0} Txs`}
+                  sub={result.is_contract ? 'Smart Contract' : 'Standard Wallet'}
                 />
               </div>
-              <div className="text-[11px] font-mono text-text-dim bg-panel-alt p-2.5 rounded border border-border flex items-center justify-between">
-                <span>Data Source: <strong className="text-text-main">{result.source}</strong></span>
-                <span>Verified At: {new Date(result.timestamp * 1000).toLocaleTimeString()}</span>
+              <div className="text-[10.5px] font-mono text-text-muted flex items-center justify-between pt-2 border-t border-border/50">
+                <span>Node: <strong className="text-zinc-300 font-normal">{result.source}</strong></span>
+                <span>Timestamp: {new Date(result.timestamp * 1000).toLocaleTimeString()}</span>
               </div>
             </div>
           )}
 
-          {/* Mempool Live Stream */}
+          {/* Mempool Display */}
           {activeTab === 'mempool' && Array.isArray(result) && (
-            <div className="space-y-2">
-              <div className="text-xs font-mono text-text-dim flex items-center justify-between pb-1 border-b border-border">
-                <span>Latest {result.length} Live Broadcasts</span>
-                <span className="text-emerald-400">● Live Stream Active</span>
-              </div>
-              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-                {result.map((tx, idx) => (
-                  <div
-                    key={tx.txid || idx}
-                    className="flex flex-wrap items-center justify-between p-2.5 rounded bg-panel-alt border border-border/80 text-xs font-mono hover:border-accent/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[10px] text-text-dim px-1.5 py-0.5 rounded bg-bg">#{idx + 1}</span>
-                      <span className="text-text-main truncate max-w-[200px] sm:max-w-[320px]">
-                        {tx.txid ? `${tx.txid.slice(0, 14)}...${tx.txid.slice(-8)}` : '0xPending...'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-accent font-semibold">
-                        {tx.value_eth ? `${tx.value_eth} ETH` : tx.value_btc ? `${tx.value_btc} BTC` : `${tx.value_sats || 0} sat`}
-                      </span>
-                      <span className="text-[10.5px] text-text-dim">
-                        {tx.fee ? `Fee: ${tx.fee} sat` : 'Mined'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Pre-check Result */}
-          {activeTab === 'precheck' && (
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: result.flagged ? '#3a1e1e' : '#1e3a2e',
-                borderColor: result.flagged ? '#c85a4f50' : '#2d5a4350',
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                {result.flagged ? (
-                  <ShieldAlert size={18} className="text-red" />
-                ) : (
-                  <ShieldCheck size={18} className="text-green" />
-                )}
-                <span
-                  className="font-semibold text-sm"
-                  style={{ color: result.flagged ? '#f07a6e' : '#6fd196' }}
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              {result.map((tx, idx) => (
+                <div
+                  key={tx.txid || idx}
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-panel-alt/40 border border-border/60 text-xs font-mono hover:border-zinc-700 transition-colors"
                 >
-                  {result.flagged ? 'FLAGGED — High Risk Pattern Detected' : 'CLEARED — Normal Behavioral Profile'}
-                </span>
-                <span className="ml-auto font-mono text-xs text-text-dim">
-                  Risk Score: {result.pre_confirmation_risk_score}/100
-                </span>
-              </div>
-              <p className="text-xs text-text-dim leading-relaxed">{result.recommendation}</p>
-              {result.flags?.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {result.flags.map((f, i) => (
-                    <li key={i} className="text-xs font-mono text-red flex items-center gap-1">
-                      <span>•</span> {f}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          {/* Key-Value Dict Displays (Block Telemetry / Tx Info) */}
-          {activeTab !== 'precheck' && activeTab !== 'address' && activeTab !== 'mempool' && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(result).map(([k, v]) => (
-                <StatCard
-                  key={k}
-                  label={k.replace(/_/g, ' ').toUpperCase()}
-                  value={String(v ?? '—')}
-                  color={
-                    k.toLowerCase().includes('gas') || k.toLowerCase().includes('fee')
-                      ? '#fbbf24'
-                      : k.toLowerCase().includes('height')
-                      ? '#38bdf8'
-                      : undefined
-                  }
-                />
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="text-text-muted text-[10px]">#{idx + 1}</span>
+                    <span className="text-zinc-300 truncate max-w-[280px]">
+                      {tx.txid ? `${tx.txid.slice(0, 16)}...${tx.txid.slice(-8)}` : 'Pending...'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 whitespace-nowrap">
+                    <span className="text-text-main font-medium">
+                      {tx.value_eth ? `${tx.value_eth} ETH` : tx.value_btc ? `${tx.value_btc} BTC` : `${tx.value_sats || 0} sat`}
+                    </span>
+                    <span className="text-[10.5px] text-text-muted">
+                      {tx.fee ? `${tx.fee} sat` : 'Mined'}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           )}
-        </motion.div>
+
+          {/* Pre-check Display */}
+          {activeTab === 'precheck' && (
+            <div
+              className={`p-4 rounded-lg border ${
+                result.flagged
+                  ? 'bg-rose-950/20 border-rose-900/40 text-rose-200'
+                  : 'bg-emerald-950/20 border-emerald-900/40 text-emerald-200'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-xs font-medium">
+                  {result.flagged ? <ShieldAlert size={16} className="text-rose-400" /> : <ShieldCheck size={16} className="text-emerald-400" />}
+                  <span>{result.flagged ? 'Flagged — Elevated Risk Probability' : 'Cleared — Normal Behavioral Pattern'}</span>
+                </div>
+                <span className="font-mono text-xs">Risk: {result.pre_confirmation_risk_score}/100</span>
+              </div>
+              <p className="text-xs text-text-dim leading-relaxed">{result.recommendation}</p>
+            </div>
+          )}
+
+          {/* Key-Value Block / Tx Info */}
+          {activeTab !== 'address' && activeTab !== 'mempool' && activeTab !== 'precheck' && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {Object.entries(result).map(([k, v]) => (
+                <MinimalStatCard key={k} label={k} value={String(v ?? '—')} />
+              ))}
+            </div>
+          )}
+        </div>
       )}
-    </motion.div>
+
+    </div>
   )
 }

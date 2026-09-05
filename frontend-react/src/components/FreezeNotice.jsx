@@ -174,77 +174,79 @@ export default function FreezeNotice({ caseData }) {
     win.print()
   }
 
-  const inputCls = 'bg-panel-alt border border-border text-text-main font-mono text-sm px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-accent w-full'
+  const inputCls = 'bg-zinc-950 border border-zinc-800 text-zinc-200 placeholder-zinc-500 font-mono text-xs px-3 py-2 rounded-md focus:outline-none focus:border-zinc-500 transition-colors w-full'
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-panel border border-border rounded-lg p-5"
+      className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5 font-sans"
     >
-      <div className="flex items-center gap-2 mb-4">
-        <Lock size={15} className="text-amber" />
-        <h3 className="font-semibold text-sm text-text-dim">Automated Freeze Notice Generator</h3>
+      <div className="flex items-center gap-2 pb-3 mb-4 border-b border-zinc-800/80">
+        <Lock size={15} className="text-zinc-400" />
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+          Automated Freeze Notice Generator
+        </h3>
       </div>
 
       {/* Form fields */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
-          <label className="text-xs text-text-dim mb-1 block">Investigating Officer</label>
-          <input className={inputCls} value={officer} onChange={e => setOfficer(e.target.value)} placeholder="Insp. Name / Badge" />
+          <label className="text-[11px] font-mono text-zinc-400 mb-1 block">INVESTIGATING OFFICER</label>
+          <input className={inputCls} value={officer} onChange={e => setOfficer(e.target.value)} placeholder="Insp. Name / Badge No." />
         </div>
         <div>
-          <label className="text-xs text-text-dim mb-1 block">Issuing Authority</label>
-          <input className={inputCls} value={authority} onChange={e => setAuthority(e.target.value)} placeholder="Cyber Crime Cell..." />
+          <label className="text-[11px] font-mono text-zinc-400 mb-1 block">ISSUING AUTHORITY</label>
+          <input className={inputCls} value={authority} onChange={e => setAuthority(e.target.value)} placeholder="Cyber Crime Cell, India" />
         </div>
         <div>
-          <label className="text-xs text-text-dim mb-1 block">Victim Reference (masked)</label>
+          <label className="text-[11px] font-mono text-zinc-400 mb-1 block">VICTIM REFERENCE (MASKED)</label>
           <input className={inputCls} value={victimRef} onChange={e => setVictimRef(e.target.value)} placeholder="VIC-2026-XXXX" />
         </div>
         <div>
-          <label className="text-xs text-text-dim mb-1 block">Additional Notes</label>
-          <input className={inputCls} value={additionalNotes} onChange={e => setAdditionalNotes(e.target.value)} placeholder="Any special instructions..." />
+          <label className="text-[11px] font-mono text-zinc-400 mb-1 block">ADDITIONAL STATUTORY NOTES</label>
+          <input className={inputCls} value={additionalNotes} onChange={e => setAdditionalNotes(e.target.value)} placeholder="Special preservation directives..." />
         </div>
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <button
           onClick={handleDownloadPDF}
-          className="flex items-center gap-2 bg-accent text-bg font-semibold text-sm px-4 py-2 rounded-md hover:brightness-110 transition-all"
+          className="flex items-center gap-2 bg-zinc-100 text-zinc-950 font-medium text-xs px-4 py-2 rounded-md hover:bg-white transition-all shadow-sm"
         >
-          <Download size={14} />
-          Download PDF
+          <Download size={13} />
+          Download PDF Notice
         </button>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-2 border border-border text-text-dim text-sm px-4 py-2 rounded-md hover:border-accent hover:text-accent transition-colors"
+          className="flex items-center gap-1.5 border border-zinc-700 bg-zinc-800/80 text-zinc-300 text-xs px-3.5 py-2 rounded-md hover:text-white hover:bg-zinc-700 transition-colors"
         >
-          {copied ? <CheckCheck size={14} className="text-green" /> : <Copy size={14} />}
-          {copied ? 'Copied!' : 'Copy Text'}
+          {copied ? <CheckCheck size={13} className="text-emerald-400" /> : <Copy size={13} />}
+          {copied ? 'Copied' : 'Copy Text'}
         </button>
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 border border-border text-text-dim text-sm px-4 py-2 rounded-md hover:border-accent hover:text-accent transition-colors"
+          className="flex items-center gap-1.5 border border-zinc-700 bg-zinc-800/80 text-zinc-300 text-xs px-3.5 py-2 rounded-md hover:text-white hover:bg-zinc-700 transition-colors"
         >
-          <Printer size={14} />
+          <Printer size={13} />
           Print
         </button>
       </div>
 
       {generated && (
-        <div className="mb-3 text-xs text-green flex items-center gap-1">
-          <CheckCheck size={13} /> PDF saved as FREEZE-NOTICE-{caseData.case_id}.pdf
+        <div className="mb-3 text-xs text-emerald-400 font-mono flex items-center gap-1.5 bg-emerald-950/20 border border-emerald-900/40 px-3 py-1.5 rounded-md">
+          <CheckCheck size={13} /> PDF generated and saved as FREEZE-NOTICE-{caseData.case_id}.pdf
         </div>
       )}
 
       {/* Notice preview */}
-      <div className="relative">
+      <div className="relative mt-2">
         <div className="flex items-center gap-2 mb-2">
-          <FileText size={13} className="text-text-dim" />
-          <span className="text-xs text-text-dim">Notice Preview</span>
+          <FileText size={13} className="text-zinc-400" />
+          <span className="text-xs font-mono text-zinc-400 uppercase">Legal Notice Document Preview</span>
         </div>
-        <pre className="bg-panel-alt border border-border rounded-md p-4 text-[11px] font-mono text-text-main overflow-auto max-h-72 leading-relaxed whitespace-pre-wrap">
+        <pre className="bg-zinc-950 border border-zinc-800/90 rounded-md p-4 text-[11px] font-mono text-zinc-300 overflow-auto max-h-72 leading-relaxed whitespace-pre-wrap selection:bg-zinc-800">
           {noticeText}
         </pre>
       </div>

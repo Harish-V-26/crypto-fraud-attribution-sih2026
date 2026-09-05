@@ -1,22 +1,18 @@
 // src/components/RealtimeTicker.jsx
-// Real-time crypto market ticker, live gas gauge, and blockchain pulse
+// Minimalist real-time market ticker & gas telemetry strip
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Activity, Flame, TrendingUp, TrendingDown, RefreshCw, Zap, Globe, Layers } from 'lucide-react'
+import { Globe, Layers } from 'lucide-react'
 import { connectRealtimeWebSocket, fetchMarketPrices, fetchGasPrices, fetchBlockchainStatus } from '../lib/api'
 
 export default function RealtimeTicker() {
   const [marketData, setMarketData] = useState(null)
   const [gasData, setGasData] = useState(null)
   const [blockStatus, setBlockStatus] = useState(null)
-  const [wsStatus, setWsStatus] = useState('connecting') // 'connected' | 'connecting' | 'disconnected' | 'error'
-  const [currency, setCurrency] = useState('USD') // 'USD' | 'INR'
-  const [lastUpdated, setLastUpdated] = useState(Date.now())
+  const [wsStatus, setWsStatus] = useState('connecting')
+  const [currency, setCurrency] = useState('USD')
 
-  // Initial fetch and WebSocket subscription
   useEffect(() => {
-    // 1. Initial REST fetch for instant display
     async function initFetch() {
       try {
         const [market, gas, blocks] = await Promise.allSettled([
@@ -28,36 +24,23 @@ export default function RealtimeTicker() {
         if (gas.status === 'fulfilled') setGasData(gas.value)
         if (blocks.status === 'fulfilled') setBlockStatus(blocks.value)
       } catch (err) {
-        console.warn('Initial ticker fetch error:', err)
+        console.warn('Initial ticker error:', err)
       }
     }
     initFetch()
 
-    // 2. Connect WebSocket stream
     const socket = connectRealtimeWebSocket(
       (payload) => {
-        if (payload.market && payload.market.assets) {
-          setMarketData(payload.market)
-        }
-        if (payload.gas && payload.gas.ethereum) {
-          setGasData(payload.gas)
-        }
-        if (payload.blockchain && payload.blockchain.networks) {
-          setBlockStatus(payload.blockchain)
-        }
-        setLastUpdated(Date.now())
+        if (payload.market?.assets) setMarketData(payload.market)
+        if (payload.gas?.ethereum) setGasData(payload.gas)
+        if (payload.blockchain?.networks) setBlockStatus(payload.blockchain)
       },
-      (status) => {
-        setWsStatus(status)
-      }
+      (status) => setWsStatus(status)
     )
 
-    // Periodic fallback poll every 8s if WebSocket is disconnected
     const interval = setInterval(() => {
-      if (wsStatus !== 'connected') {
-        initFetch()
-      }
-    }, 8000)
+      if (wsStatus !== 'connected') initFetch()
+    }, 10000)
 
     return () => {
       socket.close()
@@ -66,52 +49,51 @@ export default function RealtimeTicker() {
   }, [wsStatus])
 
   const assets = marketData?.assets ? Object.values(marketData.assets) : [
-    { symbol: 'BTC', name: 'Bitcoin', price_usd: 68450, price_inr: 5941460, change_24h: 2.45 },
-    { symbol: 'ETH', name: 'Ethereum', price_usd: 3520, price_inr: 305536, change_24h: 1.82 },
-    { symbol: 'SOL', name: 'Solana', price_usd: 152.4, price_inr: 13228.3, change_24h: 4.15 },
-    { symbol: 'BNB', name: 'BNB', price_usd: 595.0, price_inr: 51646, change_24h: -0.45 },
-    { symbol: 'USDT', name: 'Tether', price_usd: 1.0, price_inr: 86.8, change_24h: 0.01 },
+    { symbol: 'BTC', price_usd: 79620, price_inr: 6911016, change_24h: -1.65 },
+    { symbol: 'ETH', price_usd: 2452, price_inr: 212833, change_24h: -2.25 },
+    { symbol: 'SOL', price_usd: 102.1, price_inr: 8862, change_24h: -1.70 },
+    { symbol: 'BNB', price_usd: 722.5, price_inr: 62713, change_24h: -0.25 },
+    { symbol: 'USDT', price_usd: 1.0, price_inr: 86.8, change_24h: 0.01 },
   ]
 
-  const ethGas = gasData?.ethereum?.standard || gasData?.ethereum?.slow || 16
+  const ethGas = gasData?.ethereum?.standard || gasData?.ethereum?.slow || 14
   const btcFee = gasData?.bitcoin?.fastest || gasData?.bitcoin?.half_hour || 18
   const ethBlock = blockStatus?.networks?.ethereum?.block_height || 20854320
-  const btcBlock = blockStatus?.networks?.bitcoin?.block_height || 862410
+  const btcBlock = blockStatus?.networks?.bitcoin?.block_height || 965574
 
   return (
-    <div className="w-full bg-[#080d14]/90 backdrop-blur border-b border-border/80 text-xs font-mono text-text-dim px-4 py-2 select-none">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+    <div className="w-full bg-panel/60 border-b border-border/50 text-[11px] font-mono text-text-dim px-4 sm:px-6 py-2 select-none backdrop-blur-sm">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-2 gap-x-6">
         
-        {/* Left: Live Status Badge & Currency Toggle */}
+        {/* Left: Stream Indicator & Currency Switch */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-panel-alt border border-border">
+          <div className="flex items-center gap-1.5 text-text-muted">
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-1.5 h-1.5 rounded-full ${
                 wsStatus === 'connected'
-                  ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                  ? 'bg-emerald-400'
                   : wsStatus === 'connecting'
                   ? 'bg-amber-400 animate-pulse'
-                  : 'bg-rose-500'
+                  : 'bg-zinc-600'
               }`}
             />
-            <span className="text-[11px] font-semibold tracking-wider uppercase text-text-main">
-              {wsStatus === 'connected' ? 'LIVE STREAM' : wsStatus === 'connecting' ? 'CONNECTING' : 'OFFLINE SYNC'}
+            <span className="text-[10px] tracking-wider uppercase">
+              {wsStatus === 'connected' ? 'LIVE' : 'SYNC'}
             </span>
           </div>
 
-          {/* USD / INR toggle */}
           <button
             onClick={() => setCurrency(c => (c === 'USD' ? 'INR' : 'USD'))}
-            className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-panel hover:bg-panel-alt border border-border text-accent transition-colors"
-            title="Toggle USD / INR Currency display"
+            className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border/80 text-zinc-300 hover:text-white hover:bg-panel-alt transition-colors"
+            title="Toggle USD / INR Currency"
           >
-            <Globe size={11} />
+            <Globe size={10} className="text-zinc-400" />
             <span>{currency}</span>
           </button>
         </div>
 
-        {/* Center: Live Crypto Asset Prices */}
-        <div className="flex items-center gap-4 overflow-x-auto py-0.5 no-scrollbar">
+        {/* Center: Live Tickers */}
+        <div className="flex items-center gap-5 overflow-x-auto no-scrollbar py-0.5">
           {assets.map((coin) => {
             const isPos = (coin.change_24h || 0) >= 0
             const priceStr =
@@ -121,11 +103,11 @@ export default function RealtimeTicker() {
 
             return (
               <div key={coin.symbol} className="flex items-center gap-1.5 whitespace-nowrap">
-                <span className="font-bold text-text-main">{coin.symbol}</span>
-                <span className="text-white font-medium">{priceStr}</span>
+                <span className="text-zinc-400 font-medium">{coin.symbol}</span>
+                <span className="text-zinc-200 font-medium">{priceStr}</span>
                 <span
-                  className={`text-[10px] px-1 py-0.2 rounded font-semibold flex items-center ${
-                    isPos ? 'text-emerald-400 bg-emerald-950/40' : 'text-rose-400 bg-rose-950/40'
+                  className={`text-[9.5px] font-semibold ${
+                    isPos ? 'text-emerald-400' : 'text-zinc-400'
                   }`}
                 >
                   {isPos ? '+' : ''}{coin.change_24h}%
@@ -135,28 +117,25 @@ export default function RealtimeTicker() {
           })}
         </div>
 
-        {/* Right: Real-time Gas & Live Block Heights */}
-        <div className="flex items-center gap-3">
-          {/* Ethereum Gas */}
-          <div className="flex items-center gap-1.5 text-[11px] bg-panel-alt px-2 py-0.5 rounded border border-border" title="Ethereum Live Gas Fee">
-            <Flame size={12} className="text-purple-400" />
-            <span className="text-text-dim">ETH Gas:</span>
-            <span className="text-purple-300 font-semibold">{ethGas} Gwei</span>
+        {/* Right: Minimalist Gas & Blocks */}
+        <div className="flex items-center gap-3 text-text-muted">
+          <div className="flex items-center gap-1.5">
+            <span>ETH Gas</span>
+            <span className="text-zinc-300 font-medium">{ethGas} Gwei</span>
           </div>
 
-          {/* Bitcoin Sats/vB */}
-          <div className="flex items-center gap-1.5 text-[11px] bg-panel-alt px-2 py-0.5 rounded border border-border" title="Bitcoin Recommended Fast Fee">
-            <Zap size={12} className="text-amber-400" />
-            <span className="text-text-dim">BTC Fee:</span>
-            <span className="text-amber-300 font-semibold">{btcFee} sat/vB</span>
+          <span className="text-border">·</span>
+
+          <div className="flex items-center gap-1.5">
+            <span>BTC Fee</span>
+            <span className="text-zinc-300 font-medium">{btcFee} sat/vB</span>
           </div>
 
-          {/* Live Blocks */}
-          <div className="hidden lg:flex items-center gap-2 text-[10.5px] text-text-dim border-l border-border/80 pl-3">
-            <Layers size={11} className="text-cyan-400" />
-            <span>ETH #{ethBlock}</span>
-            <span className="text-border">|</span>
-            <span>BTC #{btcBlock}</span>
+          <span className="hidden lg:inline text-border">·</span>
+
+          <div className="hidden lg:flex items-center gap-1.5">
+            <Layers size={11} className="text-zinc-500" />
+            <span>#{ethBlock}</span>
           </div>
         </div>
 

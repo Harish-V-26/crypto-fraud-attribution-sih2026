@@ -18,18 +18,25 @@ import LiveInteractionsPanel from './components/LiveInteractionsPanel'
 import Dashboard      from './components/Dashboard'
 
 // Tab config for results section
+// Tab config for results section
 const RESULT_TABS = [
-  { id: 'graph',   label: '🔗 Fund Flow Graph' },
-  { id: 'risk',    label: '🛡 Risk & Attribution' },
-  { id: 'ml',      label: '🧠 ML Analysis' },
-  { id: 'freeze',  label: '🔒 Freeze Notice' },
+  { id: 'graph',   label: 'Fund Flow Graph' },
+  { id: 'risk',    label: 'Risk & Attribution' },
+  { id: 'ml',      label: 'ML Analysis' },
+  { id: 'freeze',  label: 'Freeze Notice' },
 ]
 
-function SectionTitle({ children }) {
+function SectionTitle({ title, subtitle }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <h2 className="text-lg font-semibold">{children}</h2>
-      <div className="flex-1 h-px bg-border" />
+    <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 pb-3 mb-5 border-b border-zinc-800/80">
+      <div>
+        <h2 className="text-sm font-semibold tracking-tight text-zinc-100 uppercase letter-spacing-wide">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-xs text-zinc-400 mt-0.5">{subtitle}</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -71,20 +78,23 @@ export default function App() {
   const graphData = caseData?.trace_result?.graph
 
   return (
-    <div className="min-h-screen bg-bg text-text-main font-sans">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-zinc-100 antialiased">
       <Header />
       <RealtimeTicker />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
 
         {/* ── Intake Form ─────────────────────────────────────────────── */}
         <section>
-          <SectionTitle>Report a Suspect Wallet</SectionTitle>
+          <SectionTitle 
+            title="Suspect Wallet Investigation" 
+            subtitle="Initiate automated real-time blockchain tracing and entity attribution"
+          />
           <IntakeForm onResult={handleResult} onDemoMode={() => setDemoMode(true)} />
           {demoMode && (
-            <div className="mt-3 text-xs font-mono text-amber flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber live-dot" />
-              Demo mode — backend offline. Showing illustrative data.
+            <div className="mt-3 text-xs font-mono text-amber-400/90 flex items-center gap-2 bg-amber-950/20 border border-amber-900/40 px-3 py-2 rounded-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Demo mode active — backend offline. Displaying illustrative trace data.
             </div>
           )}
         </section>
@@ -95,45 +105,51 @@ export default function App() {
             <motion.section
               id="results-section"
               key="results"
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
             >
               {/* Case header */}
-              <div className="flex flex-wrap items-center gap-3 mb-5">
-                <h2 className="text-lg font-semibold">
-                  Case <span className="font-mono text-accent">{caseData.case_id}</span>
-                </h2>
-                <div className="flex-1 h-px bg-border" />
-                {/* Risk badge */}
-                {caseData.risk_assessment && (() => {
-                  const band = caseData.risk_assessment.risk_band
-                  const cls = { LOW: 'badge-low', MEDIUM: 'badge-medium', HIGH: 'badge-high', CRITICAL: 'badge-critical' }[band] || 'badge-medium'
-                  return (
-                    <span className={`${cls} font-mono font-semibold text-xs px-3 py-1 rounded-full`}>
-                      {band} · {caseData.risk_assessment.risk_score}/100
-                    </span>
-                  )
-                })()}
-                <span className="text-xs font-mono text-text-dim border border-border px-2 py-1 rounded">
-                  {(caseData.chain || 'eth').toUpperCase()}
-                </span>
-                <span className="text-xs font-mono text-text-dim border border-border px-2 py-1 rounded">
-                  {caseData.complaint_category}
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-900/60 border border-zinc-800 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono text-zinc-500 uppercase">Case Reference</span>
+                  <span className="font-mono text-sm font-semibold text-zinc-100 bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-700/60">
+                    {caseData.case_id}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Risk badge */}
+                  {caseData.risk_assessment && (() => {
+                    const band = caseData.risk_assessment.risk_band
+                    const cls = { LOW: 'badge-low', MEDIUM: 'badge-medium', HIGH: 'badge-high', CRITICAL: 'badge-critical' }[band] || 'badge-medium'
+                    return (
+                      <span className={`${cls} font-mono font-medium text-xs px-2.5 py-1 rounded-md`}>
+                        {band} · {caseData.risk_assessment.risk_score}/100
+                      </span>
+                    )
+                  })()}
+                  <span className="text-xs font-mono text-zinc-400 bg-zinc-800/50 border border-zinc-800 px-2 py-1 rounded-md">
+                    {(caseData.chain || 'eth').toUpperCase()}
+                  </span>
+                  <span className="text-xs font-sans text-zinc-400 bg-zinc-800/50 border border-zinc-800 px-2.5 py-1 rounded-md">
+                    {caseData.complaint_category}
+                  </span>
+                </div>
               </div>
 
               {/* Tab bar */}
-              <div className="flex gap-1 bg-panel-alt border border-border rounded-lg p-1 mb-5 overflow-x-auto">
+              <div className="flex gap-1 bg-zinc-900/80 border border-zinc-800/90 rounded-lg p-1 overflow-x-auto">
                 {RESULT_TABS.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 min-w-max py-2 px-3 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                    className={`flex-1 min-w-max py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                       activeTab === tab.id
-                        ? 'bg-accent text-bg'
-                        : 'text-text-dim hover:text-text-main'
+                        ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                     }`}
                   >
                     {tab.label}
@@ -144,30 +160,30 @@ export default function App() {
               {/* Tab content */}
               <AnimatePresence mode="wait">
                 {activeTab === 'graph' && (
-                  <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <div className="bg-panel border border-border rounded-lg p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-text-dim">Fund-Flow Trace</h3>
-                        <span className="text-[10.5px] font-mono text-text-dim border border-border px-2 py-0.5 rounded">
-                          {caseData.trace_result?.data_source === 'live' ? '[live blockchain data]' : '[simulated data]'}
+                  <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-300">Transaction Graph</h3>
+                        </div>
+                        <span className="text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-800 px-2 py-0.5 rounded">
+                          {caseData.trace_result?.data_source === 'live' ? 'Live on-chain RPC' : 'Simulation'}
                         </span>
                       </div>
+                      
                       <NetworkGraph graphData={graphData} onNodeClick={handleNodeClick} />
-                      <p className="text-xs text-text-dim mt-3">
-                        💡 Click any node to inspect it. Shapes: ⬤ circle = wallet/exchange, ◆ diamond = mixer, ★ star = bridge, ▲ triangle = DeFi.
-                      </p>
-
-                      <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
-                        <span className="text-xs text-text-dim">Want an immersive forensic view?</span>
+                      
+                      <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800/80 text-xs text-zinc-400">
+                        <span>Click any node to focus attribution metrics.</span>
                         <a
                           href={`http://${window.location.hostname}:8000/3d_view.html?case_id=${caseData.case_id}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded bg-panel-alt border border-accent/40 text-accent hover:bg-accent/15 transition-all shadow-sm"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-zinc-800/80 border border-zinc-700 text-zinc-200 hover:bg-zinc-700 hover:text-white transition-all"
                         >
-                          🧊 Open in 3D Blockchain Simulation ↗
+                          Open 3D Visualizer ↗
                         </a>
-
                       </div>
                     </div>
 
@@ -179,36 +195,36 @@ export default function App() {
                 )}
 
                 {activeTab === 'risk' && (
-                  <motion.div key="risk" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div key="risk" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <RiskPanel
                       riskAssessment={caseData.risk_assessment}
                       traceResult={caseData.trace_result}
                     />
                     {selectedNode && (
-                      <div className="mt-4 bg-panel border border-accent/30 rounded-lg p-4 text-sm">
-                        <div className="text-accent font-semibold mb-1">Selected Node: {selectedNode.label}</div>
-                        <div className="font-mono text-xs text-text-dim break-all">{selectedNode.id}</div>
-                        <div className="mt-1 text-xs text-text-dim capitalize">Type: {selectedNode.type}</div>
+                      <div className="mt-4 bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-xs font-mono">
+                        <div className="text-zinc-200 font-semibold mb-1">Selected: {selectedNode.label}</div>
+                        <div className="text-zinc-400 break-all">{selectedNode.id}</div>
+                        <div className="mt-1 text-zinc-500 capitalize">Type: {selectedNode.type}</div>
                       </div>
                     )}
                   </motion.div>
                 )}
 
                 {activeTab === 'ml' && (
-                  <motion.div key="ml" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div key="ml" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <MLPanel mlData={caseData.ml_analysis} />
                   </motion.div>
                 )}
 
                 {activeTab === 'freeze' && (
-                  <motion.div key="freeze" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div key="freeze" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <FreezeNotice caseData={caseData} />
 
                     {/* JSON Report */}
                     {report && (
-                      <div className="mt-4 bg-panel border border-border rounded-lg p-5">
+                      <div className="mt-4 bg-zinc-900 border border-zinc-800 rounded-lg p-5">
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-sm font-semibold text-text-dim">Investigation Report (JSON)</h3>
+                          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-300">Investigation Report (JSON)</h3>
                           <button
                             onClick={() => {
                               const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
@@ -216,12 +232,12 @@ export default function App() {
                               const a = document.createElement('a')
                               a.href = url; a.download = `${report.report_id}.json`; a.click()
                             }}
-                            className="text-xs font-mono text-accent border border-accent/30 px-3 py-1 rounded hover:bg-accent/10 transition-colors"
+                            className="text-xs font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700 px-3 py-1 rounded-md hover:bg-zinc-700 transition-colors"
                           >
-                            ⬇ Download JSON
+                            Download JSON
                           </button>
                         </div>
-                        <pre className="bg-panel-alt text-[11px] font-mono text-text-main p-4 rounded border border-border overflow-auto max-h-64 whitespace-pre-wrap">
+                        <pre className="bg-zinc-950 text-[11px] font-mono text-zinc-300 p-4 rounded-md border border-zinc-800/90 overflow-auto max-h-64 whitespace-pre-wrap">
                           {JSON.stringify(report, null, 2)}
                         </pre>
                       </div>
@@ -235,31 +251,39 @@ export default function App() {
 
         {/* ── Live Monitor ────────────────────────────────────────────── */}
         <section>
-          <SectionTitle>Real-Time Blockchain & Mempool Forensic Monitor</SectionTitle>
+          <SectionTitle 
+            title="Blockchain & Mempool Telemetry" 
+            subtitle="Real-time block production, gas parameters, and pending on-chain transaction stream"
+          />
           <LiveMonitor />
         </section>
 
         {/* ── Dashboard ───────────────────────────────────────────────── */}
         <section>
+          <SectionTitle 
+            title="Investigation Analytics" 
+            subtitle="Aggregate case resolution metrics, typology patterns, and off-ramp attributions"
+          />
           <Dashboard refreshKey={dashRefresh} />
         </section>
 
         {/* ── Live API & Pipeline Interactions ──────────────────────────── */}
         <section>
-          <SectionTitle>Live API Request & Pipeline Telemetry</SectionTitle>
+          <SectionTitle 
+            title="API & Pipeline Interaction Stream" 
+            subtitle="Real-time telemetry of incoming requests, latency benchmarks, and forensic pipeline execution"
+          />
           <LiveInteractionsPanel />
         </section>
 
       </main>
 
       {/* Footer */}
-      <footer className="text-center text-[11.5px] text-text-dim py-10 px-6 border-t border-border max-w-3xl mx-auto">
-        SIH 2026 — Real-Time Crypto Fraud Attribution System v2.0 &middot;
-        React + Vite + Ethers.js + Infura &middot;
-        Cross-chain bridge detection (Wormhole, LayerZero, Hop, Stargate) &middot;
-        DeFi protocol detection (Uniswap, Aave, Compound, 1inch) &middot;
-        AI/ML Bayesian fraud typology classifier with anomaly scoring &middot;
-        NCRP/SAHYOG simulated integration
+      <footer className="text-center text-[11px] text-zinc-400 py-10 px-6 border-t border-zinc-800/80 max-w-4xl mx-auto space-y-1">
+        <div>SIH 2026 &middot; Cryptocurrency Fraud Attribution & Asset Tracking System</div>
+        <div className="text-zinc-400 font-mono text-[10.5px]">
+          Live On-Chain RPCs &middot; Ethers.js &middot; Bayesian Typology Classifier &middot; NCRP/SAHYOG Interoperability
+        </div>
       </footer>
     </div>
   )

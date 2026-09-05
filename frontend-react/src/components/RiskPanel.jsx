@@ -1,14 +1,14 @@
 // src/components/RiskPanel.jsx
-// Tiered risk score display with animated gauge and entity attribution
+// Minimalist tiered risk score display with clean circular meter and entity attribution
 
 import { motion } from 'framer-motion'
-import { ShieldAlert, ShieldCheck, AlertTriangle, Building2, Link } from 'lucide-react'
+import { ShieldAlert, ShieldCheck, AlertTriangle, Building2, Link, CheckCircle2 } from 'lucide-react'
 
 const RISK_CONFIG = {
-  LOW:      { color: '#6fd196', bg: '#1e3a2e', border: '#2d5a43', label: 'Low Risk',      icon: ShieldCheck,  score_range: '0–29'  },
-  MEDIUM:   { color: '#d99a3f', bg: '#3a3320', border: '#5a4a20', label: 'Medium Risk',   icon: AlertTriangle, score_range: '30–59' },
-  HIGH:     { color: '#e08360', bg: '#3a2620', border: '#5a3a20', label: 'High Risk',     icon: ShieldAlert,  score_range: '60–79' },
-  CRITICAL: { color: '#f07a6e', bg: '#3a1e1e', border: '#6a2a2a', label: 'Critical Risk', icon: ShieldAlert,  score_range: '80–100'},
+  LOW:      { color: '#34d399', badgeCls: 'badge-low',      label: 'Low Risk',      icon: ShieldCheck,  score_range: '0–29'  },
+  MEDIUM:   { color: '#fbbf24', badgeCls: 'badge-medium',   label: 'Medium Risk',   icon: AlertTriangle, score_range: '30–59' },
+  HIGH:     { color: '#fb923c', badgeCls: 'badge-high',     label: 'High Risk',     icon: ShieldAlert,  score_range: '60–79' },
+  CRITICAL: { color: '#f87171', badgeCls: 'badge-critical', label: 'Critical Risk', icon: ShieldAlert,  score_range: '80–100'},
 }
 
 function RiskGauge({ score, color }) {
@@ -18,14 +18,14 @@ function RiskGauge({ score, color }) {
   const dashOffset = circumference * (1 - pct * 0.75) // 270° arc
 
   return (
-    <div className="relative flex items-center justify-center w-36 h-36 mx-auto">
+    <div className="relative flex items-center justify-center w-36 h-36 mx-auto my-2">
       <svg width="144" height="144" viewBox="0 0 144 144" className="rotate-[135deg]">
         {/* Background track */}
         <circle
           cx="72" cy="72" r={r}
           fill="none"
-          stroke="#2a353b"
-          strokeWidth="10"
+          stroke="#27272a"
+          strokeWidth="8"
           strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
           strokeLinecap="round"
         />
@@ -34,26 +34,24 @@ function RiskGauge({ score, color }) {
           cx="72" cy="72" r={r}
           fill="none"
           stroke={color}
-          strokeWidth="10"
+          strokeWidth="8"
           strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
           strokeLinecap="round"
           initial={{ strokeDashoffset: circumference * 0.75 + circumference * 0.25 }}
           animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-          style={{ filter: `drop-shadow(0 0 6px ${color}80)` }}
+          transition={{ duration: 1.0, ease: 'easeOut' }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
-          className="font-mono font-bold text-3xl"
-          style={{ color }}
-          initial={{ opacity: 0, scale: 0.5 }}
+          className="font-mono font-bold text-3xl text-zinc-100"
+          initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.4 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
         >
           {score}
         </motion.span>
-        <span className="text-xs text-text-dim font-mono">/100</span>
+        <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase">/ 100 max</span>
       </div>
     </div>
   )
@@ -61,19 +59,19 @@ function RiskGauge({ score, color }) {
 
 function RiskIndicators({ reasons }) {
   return (
-    <ul className="space-y-2 mt-2">
+    <ul className="space-y-2 mt-3">
       {reasons.length === 0 ? (
-        <li className="text-sm text-text-dim">No elevated risk indicators detected</li>
+        <li className="text-xs text-zinc-400">No elevated risk indicators detected for this address.</li>
       ) : reasons.map((r, i) => (
         <motion.li
           key={i}
-          initial={{ opacity: 0, x: -10 }}
+          initial={{ opacity: 0, x: -6 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 * i }}
-          className="flex items-start gap-2 text-sm text-text-main"
+          transition={{ delay: 0.05 * i }}
+          className="flex items-start gap-2.5 text-xs text-zinc-300 font-sans leading-relaxed"
         >
-          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red flex-shrink-0" />
-          {r}
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
+          <span>{r}</span>
         </motion.li>
       ))}
     </ul>
@@ -90,76 +88,80 @@ export default function RiskPanel({ riskAssessment, traceResult }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-4"
+      transition={{ duration: 0.3 }}
+      className="space-y-4 font-sans"
     >
       {/* Risk Score Card */}
-      <div
-        className="rounded-lg p-5 border"
-        style={{ background: cfg.bg, borderColor: cfg.border }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <Icon size={18} style={{ color: cfg.color }} />
-          <h3 className="font-semibold text-sm" style={{ color: cfg.color }}>{cfg.label}</h3>
-          <span className="ml-auto font-mono text-xs px-2 py-0.5 rounded-full border" style={{ color: cfg.color, borderColor: cfg.border, background: '#00000030' }}>
-            Score {riskAssessment.risk_score}/100
+      <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-2">
+          <div className="flex items-center gap-2">
+            <Icon size={16} style={{ color: cfg.color }} />
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+              Risk Evaluation · {cfg.label}
+            </h3>
+          </div>
+          <span className={`${cfg.badgeCls} font-mono font-medium text-xs px-2.5 py-0.5 rounded-md`}>
+            {band} · {riskAssessment.risk_score}/100
           </span>
         </div>
 
         <RiskGauge score={riskAssessment.risk_score} color={cfg.color} />
 
-        {/* Tier bars */}
-        <div className="mt-4 flex gap-1">
-          {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(tier => (
-            <div
-              key={tier}
-              className="flex-1 h-1.5 rounded-full transition-all duration-500"
-              style={{
-                background: band === tier ? RISK_CONFIG[tier].color : '#2a353b',
-                boxShadow: band === tier ? `0 0 8px ${RISK_CONFIG[tier].color}80` : 'none',
-              }}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between text-[9px] font-mono text-text-dim mt-1 px-0.5">
-          <span>LOW</span><span>MEDIUM</span><span>HIGH</span><span>CRITICAL</span>
+        {/* Tier progress bars */}
+        <div className="mt-4 pt-3 border-t border-zinc-800/80">
+          <div className="flex gap-1.5">
+            {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(tier => (
+              <div
+                key={tier}
+                className="flex-1 h-1 rounded-full transition-all duration-300"
+                style={{
+                  background: band === tier ? RISK_CONFIG[tier].color : '#27272a',
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] font-mono text-zinc-400 mt-1.5 px-0.5 uppercase tracking-wider">
+            <span>Low</span><span>Medium</span><span>High</span><span>Critical</span>
+          </div>
         </div>
       </div>
 
       {/* Attribution Card */}
-      <div className="bg-panel border border-border rounded-lg p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Building2 size={15} className="text-amber" />
-          <h3 className="font-semibold text-sm text-text-dim">Entity Attribution</h3>
+      <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-800/80">
+          <Building2 size={15} className="text-zinc-400" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Entity Attribution</h3>
         </div>
         {attribution ? (
           <div>
-            <div className="text-2xl font-bold text-accent">{attribution.exchange}</div>
-            <div className="font-mono text-xs text-text-dim mt-1">{attribution.type}</div>
+            <div className="text-xl font-bold text-zinc-100 tracking-tight">{attribution.exchange}</div>
+            <div className="font-mono text-xs text-zinc-400 mt-1 capitalize">{attribution.type}</div>
             {traceResult?.flags?.hops_to_exchange != null && (
-              <div className="mt-2 inline-flex items-center gap-1 text-xs font-mono px-2 py-1 bg-panel-alt rounded border border-border text-text-dim">
-                <Link size={10} />
-                Resolved in {traceResult.flags.hops_to_exchange} hop(s)
+              <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 bg-zinc-800/60 rounded-md border border-zinc-700/60 text-zinc-300">
+                <Link size={11} className="text-zinc-400" />
+                Resolved in {traceResult.flags.hops_to_exchange} transaction hop(s)
               </div>
             )}
           </div>
         ) : (
           <div>
-            <div className="text-amber font-semibold text-sm">No exchange resolved within trace depth</div>
-            <div className="text-text-dim text-xs mt-1">
+            <div className="text-zinc-300 font-medium text-xs">No centralized exchange off-ramp identified within trace depth.</div>
+            <div className="text-zinc-400 text-xs mt-1">
               {traceResult?.flags?.cross_chain_detected
-                ? '⚠ Cross-chain bridge detected — funds may have moved to another blockchain.'
-                : 'Recommend deeper trace or cross-chain bridge analysis.'}
+                ? 'Cross-chain bridge detected — assets bridged to an external blockchain ledger.'
+                : 'Consider increasing search depth or examining multi-signature contracts.'}
             </div>
           </div>
         )}
       </div>
 
       {/* Risk Indicators */}
-      <div className="bg-panel border border-border rounded-lg p-5">
-        <h3 className="font-semibold text-sm text-text-dim mb-3">Risk Indicators</h3>
+      <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 pb-2 border-b border-zinc-800/80">
+          Identified Risk Indicators
+        </h3>
         <RiskIndicators reasons={riskAssessment.reasons || []} />
       </div>
     </motion.div>

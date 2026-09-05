@@ -105,50 +105,50 @@ export default function LiveInteractionsPanel() {
   }
 
   return (
-    <div className="bg-panel border border-border rounded-lg p-5 font-sans">
+    <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-5 font-sans">
       
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-border">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-zinc-800/80">
         <div className="flex items-center gap-2.5">
-          <Terminal size={17} className="text-accent" />
+          <Terminal size={16} className="text-zinc-400" />
           <div>
-            <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
-              Live Backend & Pipeline Interaction Stream
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
+              Request & Pipeline Telemetry
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </h3>
-            <p className="text-[11px] text-text-dim">
-              Real-time telemetry of incoming API requests, forensic pipeline execution, and latency metrics
+            <p className="text-[11px] text-zinc-400 mt-0.5">
+              Live logging of API calls, forensic pipeline execution, and latency metrics
             </p>
           </div>
         </div>
 
         {/* Stats Pill Badges */}
         <div className="flex items-center gap-2 font-mono text-xs">
-          <div className="px-2.5 py-1 rounded bg-panel-alt border border-border text-text-dim">
-            Avg Latency: <strong className="text-emerald-400">{stats.avgLatency} ms</strong>
+          <div className="px-2.5 py-1 rounded-md bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
+            Latency: <strong className="text-zinc-100 font-semibold">{stats.avgLatency}ms</strong>
           </div>
-          <div className="px-2.5 py-1 rounded bg-panel-alt border border-border text-text-dim">
-            WS Clients: <strong className="text-cyan-400">{stats.activeWs}</strong>
+          <div className="px-2.5 py-1 rounded-md bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
+            WS Clients: <strong className="text-zinc-100 font-semibold">{stats.activeWs}</strong>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsPaused((p) => !p)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded border text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ${
                 isPaused
-                  ? 'bg-amber-950/50 border-amber-500/50 text-amber-400'
-                  : 'bg-panel-alt border-border text-text-dim hover:text-text-main'
+                  ? 'bg-amber-950/30 border-amber-800/50 text-amber-400'
+                  : 'bg-zinc-800/80 border-zinc-700/70 text-zinc-300 hover:text-white hover:bg-zinc-700'
               }`}
               title={isPaused ? 'Resume stream' : 'Pause stream'}
             >
-              {isPaused ? <Play size={12} /> : <Pause size={12} />}
-              <span>{isPaused ? 'Paused' : 'Streaming'}</span>
+              {isPaused ? <Play size={11} /> : <Pause size={11} />}
+              <span>{isPaused ? 'Paused' : 'Live'}</span>
             </button>
             <button
               onClick={() => setInteractions([])}
-              className="p-1 rounded bg-panel-alt border border-border text-text-dim hover:text-rose-400 transition-colors"
+              className="p-1.5 rounded-md bg-zinc-800/80 border border-zinc-700/70 text-zinc-400 hover:text-rose-400 hover:border-rose-900 transition-colors"
               title="Clear interaction log"
             >
-              <Trash2 size={13} />
+              <Trash2 size={12} />
             </button>
           </div>
         </div>
@@ -160,10 +160,10 @@ export default function LiveInteractionsPanel() {
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-3 py-1 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+            className={`px-2.5 py-1 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
               activeCategory === cat.id
-                ? 'bg-accent text-bg font-semibold'
-                : 'bg-panel-alt text-text-dim hover:text-text-main border border-border'
+                ? 'bg-zinc-800 text-zinc-100 font-medium border border-zinc-700 shadow-sm'
+                : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 border border-zinc-800'
             }`}
           >
             {cat.label}
@@ -174,60 +174,60 @@ export default function LiveInteractionsPanel() {
       {/* Interaction Stream List / Console */}
       <div
         ref={terminalRef}
-        className="bg-[#070b0e] border border-border rounded-lg overflow-hidden font-mono text-xs max-h-[380px] overflow-y-auto"
+        className="bg-zinc-950 border border-zinc-800/90 rounded-lg overflow-hidden font-mono text-xs max-h-[360px] overflow-y-auto"
       >
         {filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-dim text-xs">
-            <Activity size={24} className="mx-auto mb-2 opacity-40 animate-pulse text-accent" />
-            Listening for backend interactions... Make requests or trace a wallet to view live data.
+          <div className="py-12 text-center text-zinc-400 text-xs">
+            <Activity size={20} className="mx-auto mb-2 opacity-40 animate-pulse text-zinc-400" />
+            Listening for backend interactions... Trigger wallet traces to inspect telemetry.
           </div>
         ) : (
-          <div className="divide-y divide-border/40">
+          <div className="divide-y divide-zinc-800/60">
             {filtered.map((item) => {
               const sc = item.status_code || 200
               const isOk = sc < 400
               const methodColor =
                 item.method === 'POST'
-                  ? 'text-emerald-400 bg-emerald-950/40 border-emerald-800/40'
+                  ? 'text-zinc-200 bg-zinc-800/90 border-zinc-700'
                   : item.method === 'GET'
-                  ? 'text-cyan-400 bg-cyan-950/40 border-cyan-800/40'
-                  : 'text-amber-400 bg-amber-950/40 border-amber-800/40'
+                  ? 'text-zinc-300 bg-zinc-800/60 border-zinc-700/80'
+                  : 'text-amber-300 bg-amber-950/30 border-amber-800/50'
 
               return (
                 <div
                   key={item.id}
                   onClick={() => setSelectedInteraction(item)}
-                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 p-2.5 hover:bg-[#0e161c] cursor-pointer transition-colors group"
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 p-2.5 hover:bg-zinc-900 cursor-pointer transition-colors group"
                 >
                   {/* Left: Method, Path, Timestamp */}
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-[10px] text-text-dim whitespace-nowrap">{item.timestamp}</span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${methodColor}`}>
+                    <span className="text-[10px] text-zinc-400 whitespace-nowrap">{item.timestamp}</span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${methodColor}`}>
                       {item.method}
                     </span>
-                    <span className="text-text-main truncate max-w-[240px] sm:max-w-[360px] group-hover:text-accent transition-colors font-medium">
+                    <span className="text-zinc-200 truncate max-w-[240px] sm:max-w-[360px] group-hover:text-white transition-colors font-medium">
                       {item.path}
                     </span>
                     {item.query && (
-                      <span className="text-[10.5px] text-text-dim hidden md:inline truncate max-w-[150px]">
+                      <span className="text-[10.5px] text-zinc-400 hidden md:inline truncate max-w-[150px]">
                         ?{item.query}
                       </span>
                     )}
                   </div>
 
                   {/* Right: Latency, Status Code, Category Badge */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10.5px] text-text-dim">{item.elapsed_ms} ms</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[10.5px] text-zinc-400">{item.elapsed_ms}ms</span>
                     <span
-                      className={`text-[10.5px] px-1.5 py-0.5 rounded font-semibold ${
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium ${
                         isOk
-                          ? 'text-emerald-400 bg-emerald-950/40'
-                          : 'text-rose-400 bg-rose-950/40'
+                          ? 'text-emerald-400 bg-emerald-950/40 border border-emerald-900/50'
+                          : 'text-rose-400 bg-rose-950/40 border border-rose-900/50'
                       }`}
                     >
                       {sc}
                     </span>
-                    <span className="text-[10px] text-text-dim uppercase px-1.5 py-0.5 rounded bg-panel-alt border border-border hidden sm:inline">
+                    <span className="text-[10px] text-zinc-400 uppercase px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 hidden sm:inline">
                       {item.category}
                     </span>
                   </div>
@@ -245,21 +245,21 @@ export default function LiveInteractionsPanel() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.95, y: 10 }}
+              initial={{ scale: 0.96, y: 8 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 10 }}
-              className="bg-panel border border-accent/40 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+              exit={{ scale: 0.96, y: 8 }}
+              className="bg-zinc-900 border border-zinc-700/80 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border bg-panel-alt">
+              <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/90">
                 <div className="flex items-center gap-2 font-mono text-xs">
-                  <span className="px-2 py-0.5 rounded bg-accent text-bg font-bold">
+                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700">
                     {selectedInteraction.method}
                   </span>
-                  <span className="text-text-main font-semibold truncate max-w-[340px]">
+                  <span className="text-zinc-200 font-semibold truncate max-w-[340px]">
                     {selectedInteraction.path}
                   </span>
                   <span className="text-emerald-400 font-bold ml-1">
@@ -268,7 +268,7 @@ export default function LiveInteractionsPanel() {
                 </div>
                 <button
                   onClick={() => setSelectedInteraction(null)}
-                  className="p-1 rounded text-text-dim hover:text-text-main hover:bg-panel transition-colors"
+                  className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -278,38 +278,38 @@ export default function LiveInteractionsPanel() {
               <div className="p-4 space-y-4 overflow-y-auto font-mono text-xs">
                 {/* Telemetry metadata */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                  <div className="p-2 rounded bg-panel-alt border border-border">
-                    <span className="text-text-dim block mb-0.5">REQUEST ID</span>
-                    <strong className="text-text-main break-all">{selectedInteraction.id}</strong>
+                  <div className="p-2.5 rounded bg-zinc-950 border border-zinc-800">
+                    <span className="text-zinc-400 block mb-0.5 text-[10px]">REQUEST ID</span>
+                    <strong className="text-zinc-200 break-all font-mono font-medium">{selectedInteraction.id}</strong>
                   </div>
-                  <div className="p-2 rounded bg-panel-alt border border-border">
-                    <span className="text-text-dim block mb-0.5">TIMESTAMP</span>
-                    <strong className="text-text-main">{selectedInteraction.timestamp}</strong>
+                  <div className="p-2.5 rounded bg-zinc-950 border border-zinc-800">
+                    <span className="text-zinc-400 block mb-0.5 text-[10px]">TIMESTAMP</span>
+                    <strong className="text-zinc-200 font-medium">{selectedInteraction.timestamp}</strong>
                   </div>
-                  <div className="p-2 rounded bg-panel-alt border border-border">
-                    <span className="text-text-dim block mb-0.5">LATENCY</span>
-                    <strong className="text-emerald-400">{selectedInteraction.elapsed_ms} ms</strong>
+                  <div className="p-2.5 rounded bg-zinc-950 border border-zinc-800">
+                    <span className="text-zinc-400 block mb-0.5 text-[10px]">LATENCY</span>
+                    <strong className="text-zinc-100 font-medium">{selectedInteraction.elapsed_ms} ms</strong>
                   </div>
-                  <div className="p-2 rounded bg-panel-alt border border-border">
-                    <span className="text-text-dim block mb-0.5">CLIENT IP</span>
-                    <strong className="text-text-main">{selectedInteraction.client_ip}</strong>
+                  <div className="p-2.5 rounded bg-zinc-950 border border-zinc-800">
+                    <span className="text-zinc-400 block mb-0.5 text-[10px]">CLIENT IP</span>
+                    <strong className="text-zinc-200 font-medium">{selectedInteraction.client_ip}</strong>
                   </div>
                 </div>
 
                 {/* Request Payload */}
                 {selectedInteraction.request_preview && (
                   <div>
-                    <div className="flex items-center justify-between mb-1 text-[11px] text-text-dim">
+                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-zinc-400">
                       <span>Request Payload</span>
                       <button
                         onClick={() => copyToClipboard(selectedInteraction.request_preview, 'req')}
-                        className="flex items-center gap-1 text-accent hover:underline"
+                        className="flex items-center gap-1 text-zinc-300 hover:text-white"
                       >
                         {copiedField === 'req' ? <Check size={11} /> : <Copy size={11} />}
                         {copiedField === 'req' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
-                    <pre className="p-3 rounded bg-[#070b0e] border border-border text-amber-300 text-[11px] overflow-x-auto whitespace-pre-wrap max-h-40">
+                    <pre className="p-3 rounded-md bg-zinc-950 border border-zinc-800/80 text-zinc-300 text-[11px] overflow-x-auto whitespace-pre-wrap max-h-40">
                       {selectedInteraction.request_preview}
                     </pre>
                   </div>
@@ -318,17 +318,17 @@ export default function LiveInteractionsPanel() {
                 {/* Response Payload */}
                 {selectedInteraction.response_preview && (
                   <div>
-                    <div className="flex items-center justify-between mb-1 text-[11px] text-text-dim">
+                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-zinc-400">
                       <span>Response Payload</span>
                       <button
                         onClick={() => copyToClipboard(selectedInteraction.response_preview, 'resp')}
-                        className="flex items-center gap-1 text-accent hover:underline"
+                        className="flex items-center gap-1 text-zinc-300 hover:text-white"
                       >
                         {copiedField === 'resp' ? <Check size={11} /> : <Copy size={11} />}
                         {copiedField === 'resp' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
-                    <pre className="p-3 rounded bg-[#070b0e] border border-border text-emerald-300 text-[11px] overflow-x-auto whitespace-pre-wrap max-h-48">
+                    <pre className="p-3 rounded-md bg-zinc-950 border border-zinc-800/80 text-zinc-300 text-[11px] overflow-x-auto whitespace-pre-wrap max-h-48">
                       {selectedInteraction.response_preview}
                     </pre>
                   </div>
@@ -336,10 +336,10 @@ export default function LiveInteractionsPanel() {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-3 border-t border-border bg-panel-alt flex justify-end">
+              <div className="p-3 border-t border-zinc-800 bg-zinc-900 flex justify-end">
                 <button
                   onClick={() => setSelectedInteraction(null)}
-                  className="px-4 py-1.5 rounded text-xs font-semibold bg-accent text-bg hover:brightness-110 transition-all"
+                  className="px-4 py-1.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-950 hover:bg-white transition-all"
                 >
                   Close Inspector
                 </button>

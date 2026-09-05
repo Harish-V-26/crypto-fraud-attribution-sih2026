@@ -1,12 +1,12 @@
 // src/components/IntakeForm.jsx
 import { useState } from 'react'
-import { Search, Loader2, AlertTriangle } from 'lucide-react'
+import { ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { submitComplaint, MOCK_CASE } from '../lib/api'
 
 const SAMPLES = [
-  { label: 'BTC Scam', addr: '1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF', chain: 'bitcoin' },
-  { label: 'ETH Fraud', addr: '0xDe0B295669a9FD93d5F28D9Ec85E40f4cb697BA', chain: 'ethereum' },
-  { label: 'ETH Darknet', addr: '0x000000000000000000000000000000deadbeef', chain: 'ethereum' },
+  { label: 'BTC Scam (Layering)', addr: '1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF', chain: 'bitcoin' },
+  { label: 'ETH Mixer Exit', addr: '0xDe0B295669a9FD93d5F28D9Ec85E40f4cb697BA', chain: 'ethereum' },
+  { label: 'ETH Darknet Phish', addr: '0x000000000000000000000000000000deadbeef', chain: 'ethereum' },
 ]
 
 const CATEGORIES = [
@@ -28,13 +28,13 @@ export default function IntakeForm({ onResult, onDemoMode }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!address.trim()) return
     setLoading(true)
     setError(null)
     try {
-      const result = await submitComplaint({ address, chain, category, officer })
+      const result = await submitComplaint({ address: address.trim(), chain, category, officer })
       onResult(result)
     } catch (err) {
-      // Fallback to demo mode with mock data
       console.warn('Backend unavailable, using demo data:', err.message)
       const demo = { ...MOCK_CASE, victim_reported_address: address || MOCK_CASE.victim_reported_address }
       onResult(demo)
@@ -49,90 +49,91 @@ export default function IntakeForm({ onResult, onDemoMode }) {
     setChain(s.chain)
   }
 
-  const inputCls = 'bg-panel-alt border border-border text-text-main font-mono text-sm px-3 py-2.5 rounded-md focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors w-full'
-  const labelCls = 'text-xs text-text-dim mb-1.5 block'
+  const inputCls = 'bg-panel-alt/60 border border-border text-text-main font-mono text-xs px-3 py-2.5 rounded-lg focus:outline-none focus:border-zinc-500 transition-colors w-full placeholder:text-zinc-600'
+  const labelCls = 'text-[11px] font-medium text-text-dim mb-1.5 block'
 
   return (
-    <section className="bg-panel border border-border rounded-lg p-6">
-      <h2 className="text-lg font-semibold mb-1">Report a Suspect Wallet</h2>
-      <p className="text-text-dim text-sm mb-5">
-        Simulates a complaint from NCRP / SAHYOG. Triggers: blockchain trace → VASP attribution →
-        cross-chain bridge detection → DeFi detection → AI/ML typology classification.
-      </p>
+    <div className="bg-panel border border-border/80 rounded-xl p-5 sm:p-6 shadow-minimal transition-all">
+      <div className="mb-5">
+        <h3 className="text-sm font-medium text-text-main">Suspect Address Investigation</h3>
+        <p className="text-xs text-text-muted mt-1 leading-relaxed">
+          Ingest complaint to execute multi-hop BFS tracing, VASP attribution, bridge detection, and AI/ML classification.
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className={labelCls}>Wallet Address</label>
+          <label className={labelCls}>Victim-Reported Address</label>
           <input
             className={inputCls}
             type="text"
             value={address}
             onChange={e => setAddress(e.target.value)}
-            placeholder="e.g. 0xDe0B295669a9FD93d5F28D9Ec85E40f4cb697BA"
+            placeholder="0x... or 1... / bc1..."
             required
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className={labelCls}>Chain</label>
+            <label className={labelCls}>Blockchain</label>
             <select className={inputCls} value={chain} onChange={e => setChain(e.target.value)}>
-              <option value="bitcoin">Bitcoin</option>
-              <option value="ethereum">Ethereum</option>
+              <option value="ethereum">Ethereum (ETH)</option>
+              <option value="bitcoin">Bitcoin (BTC)</option>
             </select>
           </div>
           <div>
-            <label className={labelCls}>Fraud Category</label>
+            <label className={labelCls}>Fraud Typology Category</label>
             <select className={inputCls} value={category} onChange={e => setCategory(e.target.value)}>
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
+          <div>
+            <label className={labelCls}>Officer / Case Badge</label>
+            <input
+              className={inputCls}
+              type="text"
+              value={officer}
+              onChange={e => setOfficer(e.target.value)}
+              placeholder="e.g. INSP-7029"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className={labelCls}>Investigating Officer (optional)</label>
-          <input
-            className={inputCls}
-            type="text"
-            value={officer}
-            onChange={e => setOfficer(e.target.value)}
-            placeholder="Insp. name / badge no."
-          />
-        </div>
+        <div className="flex items-center justify-between pt-2">
+          {/* Sample quick selectors */}
+          <div className="hidden sm:flex items-center gap-2 text-[11px]">
+            <span className="text-text-muted">Preset:</span>
+            {SAMPLES.map(s => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => loadSample(s)}
+                className="font-mono text-[10.5px] px-2.5 py-0.5 rounded-full border border-border/80 text-text-dim hover:text-white hover:border-zinc-500 transition-colors"
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 bg-accent text-bg font-semibold text-sm px-5 py-2.5 rounded-md hover:brightness-110 disabled:opacity-50 transition-all"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-5 py-2 rounded-lg disabled:opacity-50 transition-all shadow-minimal"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-            {loading ? 'Tracing…' : 'Trace & Attribute'}
+            {loading ? <Loader2 size={13} className="animate-spin" /> : null}
+            <span>{loading ? 'Analyzing On-Chain Flow…' : 'Execute Forensics'}</span>
+            {!loading && <ArrowRight size={13} />}
           </button>
         </div>
       </form>
 
       {error && (
-        <div className="mt-4 flex items-start gap-2 text-sm text-red bg-red/10 border border-red/30 rounded-md px-4 py-3">
-          <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" />
+        <div className="mt-4 flex items-center gap-2 text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 rounded-lg p-3">
+          <AlertCircle size={14} className="flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
-
-      {/* Sample wallets */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-text-dim">Try a sample:</span>
-        {SAMPLES.map(s => (
-          <button
-            key={s.addr}
-            type="button"
-            onClick={() => loadSample(s)}
-            className="text-xs font-mono px-3 py-1 rounded-full bg-panel-alt border border-border text-text-dim hover:border-accent hover:text-accent transition-colors"
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-    </section>
+    </div>
   )
 }

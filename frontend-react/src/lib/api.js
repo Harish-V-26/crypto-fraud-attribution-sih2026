@@ -54,6 +54,112 @@ export async function fetchMLAnalysis(caseId) {
   return res.json()
 }
 
+// ─── Real-Time Crypto & Blockchain APIs ──────────────────────────────────────
+
+export async function fetchMarketPrices() {
+  const res = await fetch(`${BASE}/crypto/market`)
+  if (!res.ok) throw new Error('Market prices unavailable')
+  return res.json()
+}
+
+export async function fetchGasPrices() {
+  const res = await fetch(`${BASE}/crypto/gas`)
+  if (!res.ok) throw new Error('Gas prices unavailable')
+  return res.json()
+}
+
+export async function fetchBlockchainStatus() {
+  const res = await fetch(`${BASE}/blockchain/status`)
+  if (!res.ok) throw new Error('Blockchain status unavailable')
+  return res.json()
+}
+
+export async function fetchAddressMetrics(chain, address) {
+  const res = await fetch(`${BASE}/blockchain/address/${chain}/${encodeURIComponent(address)}`)
+  if (!res.ok) throw new Error('Address metrics unavailable')
+  return res.json()
+}
+
+export async function fetchLiveMempool(chain = 'bitcoin', count = 40) {
+  const res = await fetch(`${BASE}/live/mempool?chain=${chain}&count=${count}`)
+  if (!res.ok) throw new Error('Mempool data unavailable')
+  return res.json()
+}
+
+export async function fetchLiveInteractions(limit = 40, category = 'all') {
+  const res = await fetch(`${BASE}/live/interactions?limit=${limit}&category=${category}`)
+  if (!res.ok) throw new Error('Interactions unavailable')
+  return res.json()
+}
+
+/**
+ * Connect to real-time WebSocket feed with automatic reconnection
+ */
+export function connectRealtimeWebSocket(onMessage, onStatusChange) {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  // In dev, backend runs on port 8000
+  const host = window.location.port === '5173' 
+    ? `${window.location.hostname}:8000` 
+    : window.location.host
+  const wsUrl = `${protocol}//${host}/api/ws/realtime`
+
+  let ws = null
+  let isClosed = false
+  let reconnectTimer = null
+
+  function connect() {
+    if (isClosed) return
+    try {
+      ws = new WebSocket(wsUrl)
+      if (onStatusChange) onStatusChange('connecting')
+
+      ws.onopen = () => {
+        if (onStatusChange) onStatusChange('connected')
+      }
+
+      ws.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data)
+          if (onMessage) onMessage(data)
+        } catch (err) {
+          console.error('WS parse error:', err)
+        }
+      }
+
+      ws.onerror = () => {
+        if (onStatusChange) onStatusChange('error')
+      }
+
+      ws.onclose = () => {
+        if (onStatusChange) onStatusChange('disconnected')
+        if (!isClosed) {
+          reconnectTimer = setTimeout(connect, 3000)
+        }
+      }
+    } catch (e) {
+      if (onStatusChange) onStatusChange('error')
+      if (!isClosed) {
+        reconnectTimer = setTimeout(connect, 3000)
+      }
+    }
+  }
+
+  connect()
+
+  return {
+    close: () => {
+      isClosed = true
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      if (ws) ws.close()
+    },
+    sendPing: () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('ping')
+      }
+    }
+  }
+}
+
 // Demo/fallback mock data for when backend is offline
 export const MOCK_CASE = {
   case_id: 'DEMO-2026-001',

@@ -356,86 +356,44 @@ class TraceReplay {
   }
 
   load(hopsData) {
-    this.hops = hopsData || [];
+    this.hops = hopsData;
     this.currentHop = -1;
-    this.pause();
+    this.u.clearTrace();
     this._updateScrubber();
-    this._updateStatus('Ready — press ▶ Play to begin replay');
-    const btn = document.getElementById('playBtn');
-    if (btn) {
-      btn.removeAttribute('data-playing');
-      btn.textContent = '▶ Play';
-    }
+    this._updateStatus('Ready — press Play to replay trace');
   }
 
   play() {
     if (this.playing) return;
-    if (!this.hops || this.hops.length === 0) {
-      this._updateStatus('No hops to replay — select a case first');
-      return;
-    }
-
-    // If at the end or before start, restart from beginning
-    if (this.currentHop >= this.hops.length - 1 || this.currentHop < 0) {
-      this.currentHop = -1;
-    }
-
     this.playing = true;
-    const btn = document.getElementById('playBtn');
-    if (btn) {
-      btn.setAttribute('data-playing', '1');
-      btn.textContent = '⏸ Pause';
-    }
+    document.getElementById('playBtn')?.setAttribute('data-playing','1');
     this._next();
   }
 
   pause() {
     this.playing = false;
+    document.getElementById('playBtn')?.removeAttribute('data-playing');
     clearTimeout(this.timer);
-    const btn = document.getElementById('playBtn');
-    if (btn) {
-      btn.removeAttribute('data-playing');
-      btn.textContent = (this.currentHop >= this.hops.length - 1) ? '▶ Replay' : '▶ Play';
-    }
   }
 
   stepForward() {
-    this.pause();
-    if (this.currentHop < this.hops.length - 1) {
-      this.currentHop++;
-      this._revealHop(this.currentHop);
-    }
+    if (this.currentHop < this.hops.length - 1) { this.currentHop++; this._revealHop(this.currentHop); }
   }
 
   stepBack() {
-    this.pause();
     if (this.currentHop > 0) {
-      this.currentHop--;
-      this._revealHop(this.currentHop, true);
+      this.u.clearTrace();
+      const target = this.currentHop - 1;
+      this.currentHop = -1;
+      for (let i = 0; i <= target; i++) { this.currentHop = i; this._revealHop(i, true); }
     }
   }
 
-  restart() {
-    this.pause();
-    this.currentHop = -1;
-    this._updateScrubber();
-    this._updateStatus('Restarted — press ▶ Play');
-    const btn = document.getElementById('playBtn');
-    if (btn) btn.textContent = '▶ Play';
-  }
+  restart() { this.pause(); this.u.clearTrace(); this.currentHop = -1; this._updateScrubber(); this._updateStatus('Restarted — press Play'); }
 
   _next() {
     if (!this.playing) return;
-    if (this.currentHop >= this.hops.length - 1) {
-      this.playing = false;
-      const btn = document.getElementById('playBtn');
-      if (btn) {
-        btn.removeAttribute('data-playing');
-        btn.textContent = '▶ Replay';
-      }
-      this._updateStatus(`Trace complete — all ${this.hops.length} hops verified. Press ▶ Replay to play again.`);
-      return;
-    }
+    if (this.currentHop >= this.hops.length - 1) { this.playing = false; document.getElementById('playBtn')?.removeAttribute('data-playing'); return; }
     this.currentHop++;
     this._revealHop(this.currentHop);
     const delay = 1200 / this.speed;
@@ -447,27 +405,15 @@ class TraceReplay {
     if (!hop) return;
     this.u.revealHop(hop, i, this.hops, instant);
     this._updateScrubber();
-    const role = {
-      source: 'REPORTED',
-      layering: 'LAYERING wallet found',
-      mixer: '⚠ MIXER detected!',
-      exchange: '✓ EXCHANGE attributed',
-      bridge: '🌉 BRIDGE detected',
-      defi: '⚙ DEFI protocol'
-    }[hop.node_type] || hop.node_type;
-    this._updateStatus(`Hop ${i + 1}/${this.hops.length} — ${role}: ${hop.label || hop.address.slice(0, 14) + '…'}`);
+    const role = { source:'REPORTED', layering:'LAYERING wallet found', mixer:'⚠ MIXER detected!', exchange:'✓ EXCHANGE attributed' }[hop.node_type] || hop.node_type;
+    this._updateStatus(`Hop ${i}/${this.hops.length-1} — ${role}: ${hop.label || hop.address.slice(0,14)+'…'}`);
   }
 
   _updateScrubber() {
     const el = document.getElementById('scrubber');
-    if (el) {
-      el.max = Math.max(0, this.hops.length - 1);
-      el.value = Math.max(0, this.currentHop);
-    }
+    if (el) { el.max = Math.max(0, this.hops.length - 1); el.value = Math.max(0, this.currentHop); }
     const pct = document.getElementById('scrubPct');
-    if (pct && this.hops.length > 0) {
-      pct.textContent = `${Math.max(0, this.currentHop + 1)} / ${this.hops.length}`;
-    }
+    if (pct && this.hops.length > 1) pct.textContent = `${this.currentHop + 1} / ${this.hops.length}`;
   }
 
   _updateStatus(msg) {
@@ -477,7 +423,6 @@ class TraceReplay {
 
   setSpeed(s) { this.speed = s; }
 }
-
 
 /* ──────────────────────────── BlockchainUniverse ─────────────────────────── */
 class BlockchainUniverse {
@@ -540,34 +485,28 @@ class BlockchainUniverse {
 
   /* ── UI bindings ── */
   _bindUI() {
-    const playBtn = document.getElementById('playBtn');
-    playBtn?.addEventListener('click', () => {
-      if (this.replay.playing) {
-        this.replay.pause();
-      } else {
-        this.replay.play();
-      }
+    document.getElementById('playBtn')?.addEventListener('click', () => {
+      if (document.getElementById('playBtn').getAttribute('data-playing')) this.replay.pause();
+      else this.replay.play();
     });
     document.getElementById('stepFwd')?.addEventListener('click', () => this.replay.stepForward());
     document.getElementById('stepBwd')?.addEventListener('click', () => this.replay.stepBack());
-    document.getElementById('restartBtn')?.addEventListener('click', () => {
-      this.replay.restart();
-      this.replay.play();
-    });
+    document.getElementById('restartBtn')?.addEventListener('click', () => { this.replay.restart(); });
     document.getElementById('speedSel')?.addEventListener('change', e => this.replay.setSpeed(parseFloat(e.target.value)));
     document.getElementById('scrubber')?.addEventListener('input', e => {
       this.replay.pause();
       const target = parseInt(e.target.value);
-      this.replay.currentHop = target;
-      this.replay._revealHop(target, true);
+      this.clearTrace();
+      this.replay.currentHop = -1;
+      for (let i = 0; i <= target; i++) { this.replay.currentHop = i; this.replay._revealHop(i, true); }
     });
     document.getElementById('muteBtn')?.addEventListener('click', e => {
       const on = this.sound.toggle();
       e.target.textContent = on ? '🔊 Sound ON' : '🔇 Sound OFF';
     });
+    document.getElementById('loadBtn')?.addEventListener('click', () => this._loadSelectedCase());
     document.getElementById('caseSelect')?.addEventListener('change', () => this._loadSelectedCase());
   }
-
 
   /* ── Events ── */
   _bindEvents() {
@@ -654,27 +593,17 @@ class BlockchainUniverse {
     const key = TYPE_KEY[hop.node_type] || 'LAYERING';
     const cfg = C[key];
 
-    let wn = this.nodes.get(hop.address);
-    if (!wn) {
-      const spread = 30;
-      const x = (i - (allHops.length - 1) / 2) * spread;
-      const y = Math.sin(i * 1.8) * 14 + (Math.cos(i * 0.7) * 8);
-      const z = Math.cos(i * 2.1) * 18 + (Math.sin(i * 1.2) * 6);
-      const pos = new T.Vector3(x, y, z);
-      wn = new WalletNode(this.scene, T, { id: hop.address, type: hop.node_type, label: hop.label }, pos);
+    // 3D spread — nodes fan out in X/Y/Z to fill the vector space
+    // Primary path goes along X, with Y and Z variation for depth
+    const spread = 30;
+    const x = (i - (allHops.length - 1) / 2) * spread;
+    const y = Math.sin(i * 1.8) * 14 + (Math.cos(i * 0.7) * 8);
+    const z = Math.cos(i * 2.1) * 18 + (Math.sin(i * 1.2) * 6);
+    const pos = new T.Vector3(x, y, z);
+
+    if (!this.nodes.has(hop.address)) {
+      const wn = new WalletNode(this.scene, T, { id: hop.address, type: hop.node_type, label: hop.label }, pos);
       this.nodes.set(hop.address, wn);
-    }
-
-    // Highlight active node
-    this.nodes.forEach(n => n.setSelected(false));
-    wn.setSelected(true);
-    if (typeof wn._confirmRings === 'function') {
-      wn._confirmRings();
-    }
-
-    // Camera smoothly glides to active node
-    if (!instant && wn.mesh) {
-      this._flyTo(wn.mesh.position);
     }
 
     // Draw edge to previous hop
@@ -706,19 +635,14 @@ class BlockchainUniverse {
     const mixerTouched = allHops.slice(0, i+1).some(h => h.node_type === 'mixer');
     this._updateHUD(exchangeHop, mixerTouched ? i : null);
 
-    const hudHops = document.getElementById('hudHops');
-    if (hudHops) hudHops.textContent = `${i + 1}/${allHops.length}`;
+    document.getElementById('hudHops').textContent = i;
     if (hop.value) {
-      const prev = parseFloat(document.getElementById('hudBTC')?.textContent) || 0;
-      const btcEl = document.getElementById('hudBTC');
-      if (btcEl) btcEl.textContent = (prev + hop.value).toFixed(4);
+      const prev = parseFloat(document.getElementById('hudBTC').textContent) || 0;
+      document.getElementById('hudBTC').textContent = (prev + hop.value).toFixed(4);
     }
-    const mixerEl = document.getElementById('hudMixer');
-    if (mixerEl) mixerEl.textContent = mixerTouched ? '⚠ YES' : '—';
-    const exchEl = document.getElementById('hudExchange');
-    if (exchEl) exchEl.textContent = exchangeHop ? (exchangeHop.label || 'Found') : '—';
+    if (mixerTouched) document.getElementById('hudMixer').textContent = '⚠ YES';
+    if (exchangeHop) document.getElementById('hudExchange').textContent = exchangeHop.label || 'Found';
   }
-
 
   // NEW: Render all nodes from the full graph (including branches) in 3D space
   revealFullGraph(graphData) {
@@ -927,7 +851,36 @@ window.addEventListener('DOMContentLoaded', async () => {
     const targetId = preselect || cases[cases.length-1].case_id;
     document.getElementById('caseSelect').value = targetId;
     await window.universe._loadSelectedCase();
+    window.universe.replay.play();
   }
+
+  // Start real-time telemetry polling for 3D header
+  startLiveTelemetry();
 });
 
+async function startLiveTelemetry() {
+  async function update() {
+    try {
+      const [mRes, gRes] = await Promise.all([
+        fetch(`${API}/api/crypto/market`).then(r => r.json()),
+        fetch(`${API}/api/crypto/gas`).then(r => r.json())
+      ]);
+      const btc = mRes.assets?.BTC?.price_usd;
+      const eth = mRes.assets?.ETH?.price_usd;
+      const gas = gRes.ethereum?.standard || gRes.ethereum?.slow;
+
+      const btcEl = document.getElementById('topBtcPrice');
+      const ethEl = document.getElementById('topEthPrice');
+      const gasEl = document.getElementById('topEthGas');
+
+      if (btcEl && btc) btcEl.innerHTML = `BTC: <strong style="color:#6fd196;">$${btc.toLocaleString()}</strong>`;
+      if (ethEl && eth) ethEl.innerHTML = `ETH: <strong style="color:#6fd196;">$${eth.toLocaleString()}</strong>`;
+      if (gasEl && gas) gasEl.textContent = `GAS: ${gas} Gwei`;
+    } catch (e) {
+      // ignore offline fallback
+    }
+  }
+  update();
+  setInterval(update, 5000);
+}
 

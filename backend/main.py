@@ -14,28 +14,247 @@ Includes:
   - Standardised investigation report generation
   - Analytics dashboard for LEAs
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 import time
+import json
+import sys
+import datetime
+import asyncio
+
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
 
 from engine.tracer import trace_wallet
 from engine.risk_scoring import score_trace
 from engine.clustering import cluster_from_txs
 from engine.cross_chain import analyse_trace_for_cross_chain
 from engine.ml_detector import analyse as ml_analyse
-from blockchain import bitcoin_client, ethereum_client
+from blockchain import bitcoin_client, ethereum_client, live_crypto
 from mock_lea import sahyog_ncrp_mock as lea
+
+# ─── ANSI color codes ────────────────────────────────────────────────────────
+RESET  = "\033[0m"
+BOLD   = "\033[1m"
+DIM    = "\033[2m"
+RED    = "\033[91m"
+GREEN  = "\033[92m"
+YELLOW = "\033[93m"
+BLUE   = "\033[94m"
+MAGENTA= "\033[95m"
+CYAN   = "\033[96m"
+WHITE  = "\033[97m"
+ORANGE = "\033[38;5;208m"
+PURPLE = "\033[38;5;135m"
+
+def _ts():
+    return datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+
+def _method_color(method: str) -> str:
+    return {"GET": CYAN, "POST": GREEN, "DELETE": RED, "PUT": YELLOW, "PATCH": ORANGE}.get(method, WHITE)
+
+def _status_color(status: int) -> str:
+    if status < 300: return GREEN
+    if status < 400: return YELLOW
+    return RED
+
+def log_separator(char="-", width=72):
+    print(f"{DIM}{char * width}{RESET}", flush=True)
+
+def log_section(title: str, color=CYAN):
+    width = 72
+    pad = max(2, (width - len(title) - 4) // 2)
+    print(f"{color}{BOLD}{'='*pad}  {title}  {'='*pad}{RESET}", flush=True)
+
+def log_info(tag: str, msg: str, color=WHITE):
+    print(f"{DIM}[{_ts()}]{RESET} {BOLD}{color}{tag:<18}{RESET} {msg}", flush=True)
+
+def log_blockchain(chain: str, address: str, step: str, detail: str = ""):
+    chain_color = ORANGE if chain == "bitcoin" else PURPLE
+    print(f"{DIM}[{_ts()}]{RESET} {BOLD}{chain_color}[{chain.upper():<8}]{RESET}  "
+          f"{CYAN}{step:<22}{RESET}  {YELLOW}{address[:20]}...{address[-6:]}{RESET}  {DIM}{detail}{RESET}", flush=True)
+
+def log_hop(hop: int, addr: str, node_type: str, label: str, value):
+    type_colors = {
+        "exchange": GREEN, "mixer": RED, "bridge": MAGENTA,
+        "defi": PURPLE, "layering": YELLOW, "source": CYAN,
+    }
+    icon = {
+        "exchange": "🏦", "mixer": "🌀", "bridge": "🌉",
+        "defi": "💱", "layering": "🔗", "source": "🎯",
+    }.get(node_type, "•")
+    color = type_colors.get(node_type, WHITE)
+    val_str = f"{value:,.0f} sat" if value and value > 1000 else (f"{value} wei" if value else "?")
+    print(f"{DIM}[{_ts()}]{RESET}   {icon}  {BOLD}{color}HOP {hop:<3}{RESET}  "
+          f"{color}{node_type:<10}{RESET}  {WHITE}{addr[:18]}...{addr[-6:]}{RESET}  "
+          f"{DIM}{label:<28}{RESET}  {CYAN}{val_str}{RESET}", flush=True)
+
+
+# ─── Live Connection & Interaction Hub ────────────────────────────────────────
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception:
+                self.disconnect(connection)
+
+ws_manager = ConnectionManager()
+
+_INTERACTION_HISTORY: List[dict] = []
+_MAX_INTERACTIONS = 120
+
+def _classify_path(path: str) -> str:
+    p = path.lower()
+    if "complaint" in p: return "complaint"
+    if "trace" in p: return "trace"
+    if "cluster" in p: return "cluster"
+    if "market" in p or "crypto" in p: return "market"
+    if "gas" in p: return "gas"
+    if "blockchain" in p: return "blockchain"
+    if "mempool" in p: return "mempool"
+    if "ml" in p: return "ml"
+    if "cross_chain" in p: return "bridge"
+    if "report" in p: return "report"
+    if "dashboard" in p or "stats" in p: return "analytics"
+    return "system"
+
+# ─── Live HTTP logging middleware ─────────────────────────────────────────────
+class LiveLogMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        t0 = time.perf_counter()
+        mc = _method_color(request.method)
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        req_snippet = ""
+        
+        # Log incoming web interaction with high visual contrast
+        print(flush=True)
+        log_separator("─")
+        print(f"{BOLD}{CYAN}🌐 [WEB INTERACTION]{RESET} {DIM}[{_ts()}]{RESET}  "
+              f"{BOLD}{mc}{request.method:<6}{RESET} {WHITE}{request.url.path}{RESET}"
+              + (f"  {YELLOW}?{request.url.query}{RESET}" if request.url.query else "")
+              + f"  {DIM}(Client: {client_ip}){RESET}",
+              flush=True)
+
+        # Log request body for POST/PUT
+        body_bytes = b""
+        if request.method in ("POST", "PUT", "PATCH"):
+            body_bytes = await request.body()
+            if body_bytes:
+                try:
+                    parsed = json.loads(body_bytes)
+                    req_snippet = json.dumps(parsed, indent=2)
+                    log_info("PAYLOAD INPUT", req_snippet[:600], YELLOW)
+                except Exception:
+                    req_snippet = body_bytes.decode(errors="replace")[:300]
+                    log_info("PAYLOAD INPUT", req_snippet, YELLOW)
+
+            # Rebuild the request so the route handler can still read it
+            async def _receive():
+                return {"type": "http.request", "body": body_bytes, "more_body": False}
+            request = Request(request.scope, _receive, request._send)
+
+        response = await call_next(request)
+        elapsed = (time.perf_counter() - t0) * 1000
+        sc = _status_color(response.status_code)
+
+        # Buffer response so we can log it
+        body_chunks = []
+        async for chunk in response.body_iterator:
+            body_chunks.append(chunk)
+        resp_body = b"".join(body_chunks)
+
+        print(f"{DIM}[{_ts()}]{RESET}  {BOLD}{sc}◀ HTTP {response.status_code}{RESET}  "
+              f"{GREEN if elapsed < 100 else YELLOW}{elapsed:.1f} ms{RESET}  {WHITE}{request.url.path}{RESET}", flush=True)
+
+        resp_snippet = ""
+        if resp_body:
+            try:
+                parsed_resp = json.loads(resp_body)
+                resp_snippet = json.dumps(parsed_resp, indent=2)
+                snippet_log = resp_snippet if len(resp_snippet) <= 600 else resp_snippet[:600] + "\n  ... (truncated)"
+                if request.url.path not in ("/api/live/interactions", "/api/crypto/market", "/api/crypto/gas"):
+                    log_info("RESPONSE DATA", snippet_log, DIM)
+            except Exception:
+                pass
+        log_separator("─")
+
+        # Record structured live interaction telemetry
+        if not request.url.path.startswith("/api/live/interactions"):
+            client_ip = request.client.host if request.client else "127.0.0.1"
+            interaction_record = {
+                "id": f"REQ-{int(time.time()*1000)}-{len(_INTERACTION_HISTORY)+1}",
+                "timestamp": _ts(),
+                "unix_time": time.time(),
+                "method": request.method,
+                "path": request.url.path,
+                "query": str(request.url.query) if request.url.query else "",
+                "client_ip": client_ip,
+                "status_code": response.status_code,
+                "elapsed_ms": round(elapsed, 1),
+                "category": _classify_path(request.url.path),
+                "request_preview": req_snippet[:400] if req_snippet else None,
+                "response_preview": resp_snippet[:400] if resp_snippet else None,
+            }
+            _INTERACTION_HISTORY.append(interaction_record)
+            if len(_INTERACTION_HISTORY) > _MAX_INTERACTIONS:
+                _INTERACTION_HISTORY.pop(0)
+
+            # Broadcast live interaction event to connected WebSocket clients
+            try:
+                asyncio.create_task(ws_manager.broadcast({
+                    "type": "interaction",
+                    "interaction": interaction_record,
+                }))
+            except Exception:
+                pass
+
+        from starlette.responses import Response as StarletteResponse
+        return StarletteResponse(
+            content=resp_body,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
 
 app = FastAPI(title="Real-Time Crypto Fraud Attribution System", version="2.0.0")
 
+# NOTE: CORSMiddleware must be added AFTER LiveLogMiddleware so it wraps the outside
+app.add_middleware(LiveLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Print startup banner
+log_section("CRYPTO FRAUD ATTRIBUTION - BACKEND LIVE", GREEN)
+log_info("STATUS", "Server starting on http://0.0.0.0:8000", GREEN)
+log_info("API DOCS", "http://localhost:8000/docs", CYAN)
+log_info("3D VIEW", "http://localhost:8000/3d_view.html", CYAN)
+log_separator("=")
+print(flush=True)
 
 
 class ComplaintIn(BaseModel):
@@ -61,7 +280,15 @@ async def submit_complaint(payload: ComplaintIn):
       → AI/ML fraud typology classification + anomaly scoring
       → risk scoring → case creation
     """
+    t_start = time.perf_counter()
+    log_section("NEW COMPLAINT RECEIVED", YELLOW)
+    log_info("CHAIN",    payload.chain.upper(), ORANGE if payload.chain == "bitcoin" else PURPLE)
+    log_info("ADDRESS",  payload.victim_reported_address, WHITE)
+    log_info("CATEGORY", payload.complaint_category, CYAN)
+    log_info("MAX HOPS", str(payload.max_hops), DIM)
+
     # 1. Open case (NCRP/SAHYOG intake)
+    log_info("STEP 1/6", "Opening NCRP/SAHYOG case...", CYAN)
     case = lea.ingest_complaint(
         victim_reported_address=payload.victim_reported_address,
         chain=payload.chain,
@@ -69,23 +296,62 @@ async def submit_complaint(payload: ComplaintIn):
         reporting_officer=payload.reporting_officer,
         victim_id_masked=payload.victim_id_masked,
     )
+    log_info("CASE ID",  case["case_id"], GREEN)
 
     # 2. Blockchain trace (live or simulation fallback)
+    log_info("STEP 2/6", f"Starting blockchain BFS trace ({payload.chain.upper()})...", CYAN)
+    log_blockchain(payload.chain, payload.victim_reported_address, "BFS TRACE START")
     trace_result = await trace_wallet(
         payload.victim_reported_address, payload.chain, max_hops=payload.max_hops
     )
+    src = trace_result.get("data_source", "?")
+    hops = trace_result.get("traced_hops", 0)
+    src_color = GREEN if src == "live" else YELLOW
+    log_info("DATA SRC",  src.upper(), src_color)
+    log_info("HOPS FOUND", str(hops), WHITE)
+    # Print each hop
+    for i, step in enumerate(trace_result.get("path", [])):
+        node = next((n for n in trace_result["graph"]["nodes"] if n["id"] == step["address"]), {})
+        edge = next((e for e in trace_result["graph"]["edges"] if e["to"] == step["address"]), {})
+        log_hop(i, step["address"], node.get("type", step.get("role", "?")),
+                node.get("label", ""), edge.get("value", 0))
+    if trace_result.get("attribution"):
+        attr = trace_result["attribution"]
+        log_info("ATTRIBUTED", f"✅ {attr.get('exchange','?')} ({attr.get('type','?')})", GREEN)
+    else:
+        log_info("ATTRIBUTED", "⚠️  No exchange found in trace depth", YELLOW)
 
     # 3. Risk scoring (rule-based, explainable)
+    log_info("STEP 3/6", "Running risk scoring...", CYAN)
     risk = score_trace(trace_result)
+    band_color = {"CRITICAL": RED, "HIGH": ORANGE, "MEDIUM": YELLOW, "LOW": GREEN}.get(risk.get("risk_band", ""), WHITE)
+    log_info("RISK SCORE", f"{risk.get('risk_score','?')} / 100  [{risk.get('risk_band','?')}]", band_color)
+    for reason in risk.get("reasons", [])[:4]:
+        log_info("  reason", reason, DIM)
 
     # 4. Cross-chain bridge + DeFi analysis
+    log_info("STEP 4/6", "Cross-chain bridge & DeFi analysis...", CYAN)
     cross_chain = analyse_trace_for_cross_chain(trace_result)
+    log_info("BRIDGES", str(cross_chain.get("bridge_events_detected", 0)), MAGENTA)
+    log_info("DEFI",    str(cross_chain.get("defi_events_detected", 0)), PURPLE)
+    log_info("CC RISK",  cross_chain.get("cross_chain_risk", "NONE"), MAGENTA)
 
     # 5. AI/ML fraud typology classification + pattern recognition + anomaly scoring
+    log_info("STEP 5/6", "AI/ML fraud typology classification...", CYAN)
     ml_result = ml_analyse(trace_result, cross_chain)
+    log_info("TYPOLOGY",  ml_result.get("top_fraud_typology", "?"), MAGENTA)
+    log_info("CONFIDENCE", str(ml_result.get("typology_confidence", "?")), WHITE)
+    log_info("ANOMALY",   f"{ml_result.get('anomaly_score','?')} [{ml_result.get('anomaly_band','?')}]", RED)
+    for p in ml_result.get("patterns_detected", [])[:3]:
+        log_info("  pattern", p.get("pattern_name", "?"), DIM)
 
     # 6. Attach everything to the case
+    log_info("STEP 6/6", "Finalising case & attaching results...", CYAN)
     case = lea.attach_trace_result(case["case_id"], trace_result, risk, cross_chain, ml_result)
+
+    elapsed = (time.perf_counter() - t_start) * 1000
+    log_section(f"PIPELINE COMPLETE  {elapsed:.0f} ms", GREEN)
+    print(flush=True)
 
     return case
 
@@ -93,10 +359,22 @@ async def submit_complaint(payload: ComplaintIn):
 @app.get("/api/trace")
 async def trace_only(address: str, chain: Literal["bitcoin", "ethereum"], max_hops: int = 5):
     """Standalone trace endpoint — no case creation."""
+    log_section("STANDALONE TRACE", CYAN)
+    log_blockchain(chain, address, "BFS TRACE START")
     trace_result = await trace_wallet(address, chain, max_hops=max_hops)
+    log_info("DATA SRC", trace_result.get("data_source", "?").upper(),
+             GREEN if trace_result.get("data_source") == "live" else YELLOW)
+    log_info("HOPS", str(trace_result.get("traced_hops", 0)), WHITE)
+    for i, step in enumerate(trace_result.get("path", [])):
+        node = next((n for n in trace_result["graph"]["nodes"] if n["id"] == step["address"]), {})
+        edge = next((e for e in trace_result["graph"]["edges"] if e["to"] == step["address"]), {})
+        log_hop(i, step["address"], node.get("type", step.get("role", "?")),
+                node.get("label", ""), edge.get("value", 0))
     risk = score_trace(trace_result)
+    log_info("RISK", f"{risk.get('risk_score','?')} [{risk.get('risk_band','?')}]", YELLOW)
     cross_chain = analyse_trace_for_cross_chain(trace_result)
     ml_result = ml_analyse(trace_result, cross_chain)
+    log_section("TRACE DONE", GREEN)
     return {"trace": trace_result, "risk": risk, "cross_chain": cross_chain, "ml": ml_result}
 
 
@@ -175,12 +453,112 @@ async def dashboard_stats():
     return lea.dashboard_stats()
 
 
+@app.get("/api/crypto/market")
+async def crypto_market():
+    """Real-time crypto asset market prices, 24h metrics and INR conversions."""
+    return await live_crypto.get_live_market_prices()
+
+
+@app.get("/api/crypto/gas")
+async def crypto_gas():
+    """Real-time gas and network fees for Ethereum (Gwei) and Bitcoin (sat/vB)."""
+    return await live_crypto.get_live_gas_and_fees()
+
+
+@app.get("/api/blockchain/status")
+async def blockchain_status():
+    """Real-time block heights and network status for Bitcoin and Ethereum."""
+    return await live_crypto.get_live_blockchain_status()
+
+
+@app.get("/api/blockchain/address/{chain}/{address}")
+async def blockchain_address_info(chain: str, address: str):
+    """Real-time on-chain balance, tx counts, and fiat conversions for an address."""
+    return await live_crypto.get_live_address_metrics(address, chain)
+
+
 @app.get("/api/live/mempool")
 async def live_mempool(chain: str = "bitcoin", count: int = 60):
-    """Synthetic mempool transactions for the 3D ambient universe animation."""
-    from blockchain.mock_data import get_mock_mempool
+    """Live mempool and recent transactions feed for 3D visualization and monitor."""
     count = min(count, 120)
-    return {"chain": chain, "mempool": get_mock_mempool(chain, count)}
+    txs = await live_crypto.get_live_mempool_txs(chain, count)
+    return {"chain": chain, "mempool": txs}
+
+
+@app.get("/api/live/interactions")
+async def get_live_interactions(limit: int = 50, category: Optional[str] = None):
+    """
+    Returns real-time backend API request/response interactions,
+    pipeline executions, and latency metrics for forensics analysis.
+    """
+    history = _INTERACTION_HISTORY
+    if category and category.lower() != "all":
+        history = [i for i in history if i["category"].lower() == category.lower()]
+    limit = min(max(1, limit), 120)
+    return {
+        "active_ws_clients": len(ws_manager.active_connections),
+        "total_captured": len(_INTERACTION_HISTORY),
+        "count": len(history[-limit:]),
+        "interactions": list(reversed(history[-limit:])),
+    }
+
+
+@app.websocket("/api/ws/realtime")
+async def websocket_realtime_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint broadcasting real-time market prices, gas fees,
+    network status, and live transaction pulses every 2.5 seconds.
+    """
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            # Gather fresh real-time metrics concurrently
+            market, gas, status = await asyncio.gather(
+                live_crypto.get_live_market_prices(),
+                live_crypto.get_live_gas_and_fees(),
+                live_crypto.get_live_blockchain_status(),
+                return_exceptions=True,
+            )
+            payload = {
+                "type": "heartbeat",
+                "timestamp": int(time.time()),
+                "market": market if isinstance(market, dict) else {},
+                "gas": gas if isinstance(gas, dict) else {},
+                "blockchain": status if isinstance(status, dict) else {},
+            }
+            await websocket.send_json(payload)
+            # Sleep between broadcasts or wait for incoming client ping
+            try:
+                # Check for incoming client message with timeout
+                msg = await asyncio.wait_for(websocket.receive_text(), timeout=2.5)
+                # Client may request on-demand refresh or echo
+                if msg == "ping":
+                    await websocket.send_json({"type": "pong", "timestamp": int(time.time())})
+            except asyncio.TimeoutError:
+                pass
+    except (WebSocketDisconnect, Exception):
+        ws_manager.disconnect(websocket)
+
+
+# ─── Server-Sent Events (SSE) Stream ──────────────────────────────────────────
+@app.get("/api/stream/live-crypto")
+async def sse_live_crypto_stream():
+    """
+    Server-Sent Events endpoint streaming real-time prices & gas updates
+    for web clients preferring EventSource.
+    """
+    async def event_generator():
+        while True:
+            try:
+                market = await live_crypto.get_live_market_prices()
+                gas = await live_crypto.get_live_gas_and_fees()
+                data = json.dumps({"market": market, "gas": gas, "timestamp": int(time.time())})
+                yield f"data: {data}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            await asyncio.sleep(3)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.get("/api/report/{case_id}")

@@ -116,6 +116,13 @@
   .leg-shape-icosa { clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%); }
   .leg-shape-octa   { clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); border-radius:0; }
 
+  /* ───────── EMPTY STATE ───────── */
+  #emptyState {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    text-align:center; color:#8a999e; z-index:5; pointer-events:none;
+  }
+  #emptyState .es-title { font-size:22px; font-weight:600; color:#4fb3a9; margin-bottom:8px; }
+  #emptyState .es-sub { font-size:13px; }
 </style>
 </head>
 <body>
@@ -131,6 +138,12 @@
     <div class="brand-sub3d">Real-Time Crypto Fraud Attribution · SIH 2026</div>
   </div>
   <div class="spacer"></div>
+  <div id="topbarLiveCrypto" style="display:flex;align-items:center;gap:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a999e;background:#080f12;padding:5px 14px;border-radius:4px;border:1px solid #1a2e33;">
+    <span style="color:#6fd196;font-weight:600;">● LIVE TELEMETRY</span>
+    <span id="topBtcPrice" style="color:#dfe6e8;">BTC: <strong style="color:#6fd196;">$...</strong></span>
+    <span id="topEthPrice" style="color:#dfe6e8;">ETH: <strong style="color:#6fd196;">$...</strong></span>
+    <span id="topEthGas" style="color:#fbbf24;">GAS: ... Gwei</span>
+  </div>
   <a href="index.html" class="back-link3d">← Dashboard</a>
 </div>
 
@@ -200,6 +213,11 @@
   <span id="scrubPct">— / —</span>
 </div>
 
+<!-- EMPTY STATE -->
+<div id="emptyState">
+  <div class="es-title">◈ Blockchain Universe Active</div>
+  <div class="es-sub">Select a traced case and press ▶ Play to begin the simulation</div>
+</div>
 
 <!-- THREE.JS + ORBITCONTROLS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

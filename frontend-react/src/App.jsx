@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { fetchReport } from './lib/api'
 
 import Header         from './components/Header'
+import RealtimeTicker from './components/RealtimeTicker'
 import IntakeForm     from './components/IntakeForm'
 import NetworkGraph   from './components/NetworkGraph'
 import RiskPanel      from './components/RiskPanel'
@@ -13,6 +14,7 @@ import MLPanel        from './components/MLPanel'
 import CrossChainPanel from './components/CrossChainPanel'
 import FreezeNotice   from './components/FreezeNotice'
 import LiveMonitor    from './components/LiveMonitor'
+import LiveInteractionsPanel from './components/LiveInteractionsPanel'
 import Dashboard      from './components/Dashboard'
 
 // Tab config for results section
@@ -71,6 +73,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg text-text-main font-sans">
       <Header />
+      <RealtimeTicker />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
@@ -232,13 +235,19 @@ export default function App() {
 
         {/* ── Live Monitor ────────────────────────────────────────────── */}
         <section>
-          <SectionTitle>Live Ethereum Monitor (Infura)</SectionTitle>
+          <SectionTitle>Real-Time Blockchain & Mempool Forensic Monitor</SectionTitle>
           <LiveMonitor />
         </section>
 
         {/* ── Dashboard ───────────────────────────────────────────────── */}
         <section>
           <Dashboard refreshKey={dashRefresh} />
+        </section>
+
+        {/* ── Live API & Pipeline Interactions ──────────────────────────── */}
+        <section>
+          <SectionTitle>Live API Request & Pipeline Telemetry</SectionTitle>
+          <LiveInteractionsPanel />
         </section>
 
       </main>

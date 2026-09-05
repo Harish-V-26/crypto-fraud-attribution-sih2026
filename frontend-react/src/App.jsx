@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchReport } from './lib/api'
 
+import { FileText } from 'lucide-react'
 import Header         from './components/Header'
 import RealtimeTicker from './components/RealtimeTicker'
 import IntakeForm     from './components/IntakeForm'
@@ -12,6 +13,7 @@ import NetworkGraph   from './components/NetworkGraph'
 import RiskPanel      from './components/RiskPanel'
 import MLPanel        from './components/MLPanel'
 import CrossChainPanel from './components/CrossChainPanel'
+import ReportPanel    from './components/ReportPanel'
 import FreezeNotice   from './components/FreezeNotice'
 import LiveMonitor    from './components/LiveMonitor'
 import LiveInteractionsPanel from './components/LiveInteractionsPanel'
@@ -22,6 +24,7 @@ const RESULT_TABS = [
   { id: 'graph',   label: 'Fund Flow Graph' },
   { id: 'risk',    label: 'Risk & Attribution' },
   { id: 'ml',      label: 'ML Analysis' },
+  { id: 'report',  label: 'Investigation Report' },
   { id: 'freeze',  label: 'Freeze Notice' },
 ]
 
@@ -136,6 +139,16 @@ export default function App() {
                   <span className="text-xs font-sans text-black bg-white border border-zinc-300 px-2.5 py-1 rounded-md font-medium">
                     {caseData.complaint_category}
                   </span>
+
+                  {/* Quick Report Button */}
+                  <button
+                    onClick={() => setActiveTab('report')}
+                    className="flex items-center gap-1.5 text-xs font-mono font-semibold bg-black text-white hover:bg-zinc-800 px-3 py-1 rounded-md shadow-xs transition-colors cursor-pointer"
+                    title="Generate and view official investigation report"
+                  >
+                    <FileText size={13} />
+                    <span>Generate Report</span>
+                  </button>
                 </div>
               </div>
 
@@ -212,6 +225,12 @@ export default function App() {
                 {activeTab === 'ml' && (
                   <motion.div key="ml" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <MLPanel mlData={caseData.ml_analysis} />
+                  </motion.div>
+                )}
+
+                {activeTab === 'report' && (
+                  <motion.div key="report" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <ReportPanel caseData={caseData} report={report} />
                   </motion.div>
                 )}
 

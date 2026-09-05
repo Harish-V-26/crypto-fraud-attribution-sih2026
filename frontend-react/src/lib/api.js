@@ -1,7 +1,7 @@
 // src/lib/api.js
 // Wrapper around the FastAPI backend (/api/*) calls
 
-const BASE = '/api'
+const BASE = typeof window !== 'undefined' ? `http://${window.location.hostname}:8000/api` : 'http://localhost:8000/api'
 
 export async function checkHealth() {
   const res = await fetch(`${BASE}/health`)

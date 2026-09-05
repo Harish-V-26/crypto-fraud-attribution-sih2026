@@ -143,64 +143,11 @@ def _classify_path(path: str) -> str:
 class LiveLogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         t0 = time.perf_counter()
-        mc = _method_color(request.method)
-        client_ip = request.client.host if request.client else "127.0.0.1"
-        req_snippet = ""
-        
-        # Log incoming web interaction with high visual contrast
-        print(flush=True)
-        log_separator("─")
-        print(f"{BOLD}{CYAN}🌐 [WEB INTERACTION]{RESET} {DIM}[{_ts()}]{RESET}  "
-              f"{BOLD}{mc}{request.method:<6}{RESET} {WHITE}{request.url.path}{RESET}"
-              + (f"  {YELLOW}?{request.url.query}{RESET}" if request.url.query else "")
-              + f"  {DIM}(Client: {client_ip}){RESET}",
-              flush=True)
-
-        # Log request body for POST/PUT
-        body_bytes = b""
-        if request.method in ("POST", "PUT", "PATCH"):
-            body_bytes = await request.body()
-            if body_bytes:
-                try:
-                    parsed = json.loads(body_bytes)
-                    req_snippet = json.dumps(parsed, indent=2)
-                    log_info("PAYLOAD INPUT", req_snippet[:600], YELLOW)
-                except Exception:
-                    req_snippet = body_bytes.decode(errors="replace")[:300]
-                    log_info("PAYLOAD INPUT", req_snippet, YELLOW)
-
-            # Rebuild the request so the route handler can still read it
-            async def _receive():
-                return {"type": "http.request", "body": body_bytes, "more_body": False}
-            request = Request(request.scope, _receive, request._send)
-
         response = await call_next(request)
         elapsed = (time.perf_counter() - t0) * 1000
-        sc = _status_color(response.status_code)
 
-        # Buffer response so we can log it
-        body_chunks = []
-        async for chunk in response.body_iterator:
-            body_chunks.append(chunk)
-        resp_body = b"".join(body_chunks)
-
-        print(f"{DIM}[{_ts()}]{RESET}  {BOLD}{sc}◀ HTTP {response.status_code}{RESET}  "
-              f"{GREEN if elapsed < 100 else YELLOW}{elapsed:.1f} ms{RESET}  {WHITE}{request.url.path}{RESET}", flush=True)
-
-        resp_snippet = ""
-        if resp_body:
-            try:
-                parsed_resp = json.loads(resp_body)
-                resp_snippet = json.dumps(parsed_resp, indent=2)
-                snippet_log = resp_snippet if len(resp_snippet) <= 600 else resp_snippet[:600] + "\n  ... (truncated)"
-                if request.url.path not in ("/api/live/interactions", "/api/crypto/market", "/api/crypto/gas"):
-                    log_info("RESPONSE DATA", snippet_log, DIM)
-            except Exception:
-                pass
-        log_separator("─")
-
-        # Record structured live interaction telemetry
-        if not request.url.path.startswith("/api/live/interactions"):
+        # Record structured live interaction telemetry for API routes
+        if request.url.path.startswith("/api") and not request.url.path.startswith("/api/live/interactions"):
             client_ip = request.client.host if request.client else "127.0.0.1"
             interaction_record = {
                 "id": f"REQ-{int(time.time()*1000)}-{len(_INTERACTION_HISTORY)+1}",
@@ -213,14 +160,11 @@ class LiveLogMiddleware(BaseHTTPMiddleware):
                 "status_code": response.status_code,
                 "elapsed_ms": round(elapsed, 1),
                 "category": _classify_path(request.url.path),
-                "request_preview": req_snippet[:400] if req_snippet else None,
-                "response_preview": resp_snippet[:400] if resp_snippet else None,
             }
             _INTERACTION_HISTORY.append(interaction_record)
             if len(_INTERACTION_HISTORY) > _MAX_INTERACTIONS:
                 _INTERACTION_HISTORY.pop(0)
 
-            # Broadcast live interaction event to connected WebSocket clients
             try:
                 asyncio.create_task(ws_manager.broadcast({
                     "type": "interaction",
@@ -229,13 +173,9 @@ class LiveLogMiddleware(BaseHTTPMiddleware):
             except Exception:
                 pass
 
-        from starlette.responses import Response as StarletteResponse
-        return StarletteResponse(
-            content=resp_body,
-            status_code=response.status_code,
-            headers=dict(response.headers),
-            media_type=response.media_type,
-        )
+        return response
+
+
 
 app = FastAPI(title="Real-Time Crypto Fraud Attribution System", version="2.0.0")
 
@@ -678,7 +618,9 @@ async def serve_blockchain_sim():
 async def serve_style_css():
     return FileResponse(os.path.join(_FRONTEND_DIR, "style.css"))
 
-if os.path.isdir(_FRONTEND_DIR):
-    app.mount("/", StaticFiles(directory=_FRONTEND_DIR, html=True), name="frontend_static")
+@app.get("/")
+async def serve_root_index():
+    return FileResponse(os.path.join(_FRONTEND_DIR, "index.html"))
+
 
 

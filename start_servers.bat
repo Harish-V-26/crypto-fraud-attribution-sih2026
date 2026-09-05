@@ -34,9 +34,8 @@ echo.
 echo   [A] ON THIS LAPTOP (Localhost):
 echo   ----------------------------------------------------------
 echo   1. React Dashboard:        http://localhost:5173
-echo   2. 3D Vector Simulation:   http://localhost:8080/3d_view.html
+echo   2. 3D Vector Simulation:   http://localhost:8000/3d_view.html
 echo   3. Backend API Docs:       http://localhost:8000/docs
-echo   4. Vanilla Frontend:       http://localhost:8080
 echo.
 echo   [B] ON YOUR FRIEND'S LAPTOP (Same Wi-Fi / LAN):
 echo   ----------------------------------------------------------
@@ -44,11 +43,11 @@ echo   Detected Your LAN IP: %LOCAL_IP%
 echo.
 echo   Tell your friend to open in their browser:
 echo   1. React Dashboard:        http://%LOCAL_IP%:5173
-echo   2. 3D Vector Simulation:   http://%LOCAL_IP%:8080/3d_view.html
+echo   2. 3D Vector Simulation:   http://%LOCAL_IP%:8000/3d_view.html
 echo   3. Backend API Docs:       http://%LOCAL_IP%:8000/docs
 echo.
-echo   (Note: If your friend cannot connect, ensure Windows Firewall
-echo    allows incoming connections or set your Wi-Fi to 'Private')
+echo   (Note: Both 3D view and API run seamlessly together on port 8000)
+
 echo ============================================================
 echo.
 echo All 3 server terminal windows are running in the background.

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Real-Time Crypto Fraud Attribution System — Backend API
 SIH 2026 — Full-featured build.
 
@@ -275,3 +275,32 @@ def _build_recommended_action(tr, cc, ml):
             "ALERT: Highly anomalous trace pattern — escalate to specialised cyber forensics unit."
         )
     return " | ".join(actions)
+
+
+# --- Serve static frontend (including 3D view) directly on backend port 8000 ---
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+_FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+
+@app.get("/3d_view.html")
+async def serve_3d_view():
+    return FileResponse(os.path.join(_FRONTEND_DIR, "3d_view.html"))
+
+@app.get("/app3d.js")
+async def serve_app3d():
+    return FileResponse(os.path.join(_FRONTEND_DIR, "app3d.js"))
+
+@app.get("/blockchain_sim.js")
+async def serve_blockchain_sim():
+    return FileResponse(os.path.join(_FRONTEND_DIR, "blockchain_sim.js"))
+
+@app.get("/style.css")
+async def serve_style_css():
+    return FileResponse(os.path.join(_FRONTEND_DIR, "style.css"))
+
+if os.path.isdir(_FRONTEND_DIR):
+    app.mount("/", StaticFiles(directory=_FRONTEND_DIR, html=True), name="frontend_static")
+
+

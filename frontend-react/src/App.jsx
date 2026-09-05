@@ -157,13 +157,14 @@ export default function App() {
                       <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
                         <span className="text-xs text-text-dim">Want an immersive forensic view?</span>
                         <a
-                          href={`http://${window.location.hostname}:8080/3d_view.html?case_id=${caseData.case_id}`}
+                          href={`http://${window.location.hostname}:8000/3d_view.html?case_id=${caseData.case_id}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded bg-panel-alt border border-accent/40 text-accent hover:bg-accent/15 transition-all shadow-sm"
                         >
                           🧊 Open in 3D Blockchain Simulation ↗
                         </a>
+
                       </div>
                     </div>
 

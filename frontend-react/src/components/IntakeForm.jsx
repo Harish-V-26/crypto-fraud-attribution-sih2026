@@ -1,4 +1,6 @@
 // src/components/IntakeForm.jsx
+// White background & Black text Suspect Wallet Intake
+
 import { useState } from 'react'
 import { ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { submitComplaint, MOCK_CASE } from '../lib/api'
@@ -49,14 +51,14 @@ export default function IntakeForm({ onResult, onDemoMode }) {
     setChain(s.chain)
   }
 
-  const inputCls = 'bg-panel-alt/60 border border-border text-text-main font-mono text-xs px-3 py-2.5 rounded-lg focus:outline-none focus:border-zinc-500 transition-colors w-full placeholder:text-zinc-600'
-  const labelCls = 'text-[11px] font-medium text-text-dim mb-1.5 block'
+  const inputCls = 'bg-zinc-50 border border-zinc-300 text-black font-mono text-xs px-3 py-2.5 rounded-lg focus:outline-none focus:border-black transition-colors w-full placeholder:text-zinc-400'
+  const labelCls = 'text-[11px] font-semibold text-zinc-800 mb-1.5 block uppercase tracking-wider'
 
   return (
-    <div className="bg-panel border border-border/80 rounded-xl p-5 sm:p-6 shadow-minimal transition-all">
+    <div className="bg-white border border-zinc-200 rounded-xl p-5 sm:p-6 shadow-sm transition-all">
       <div className="mb-5">
-        <h3 className="text-sm font-medium text-text-main">Suspect Address Investigation</h3>
-        <p className="text-xs text-text-muted mt-1 leading-relaxed">
+        <h3 className="text-sm font-semibold text-black">Suspect Address Investigation</h3>
+        <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
           Ingest complaint to execute multi-hop BFS tracing, VASP attribution, bridge detection, and AI/ML classification.
         </p>
       </div>
@@ -103,13 +105,13 @@ export default function IntakeForm({ onResult, onDemoMode }) {
         <div className="flex items-center justify-between pt-2">
           {/* Sample quick selectors */}
           <div className="hidden sm:flex items-center gap-2 text-[11px]">
-            <span className="text-text-muted">Preset:</span>
+            <span className="text-zinc-500 font-medium">Preset:</span>
             {SAMPLES.map(s => (
               <button
                 key={s.label}
                 type="button"
                 onClick={() => loadSample(s)}
-                className="font-mono text-[10.5px] px-2.5 py-0.5 rounded-full border border-border/80 text-text-dim hover:text-white hover:border-zinc-500 transition-colors"
+                className="font-mono text-[10.5px] px-2.5 py-1 rounded-md border border-zinc-300 bg-white text-zinc-700 hover:text-black hover:border-black hover:bg-zinc-100 transition-colors shadow-2xs font-medium"
               >
                 {s.label}
               </button>
@@ -119,7 +121,7 @@ export default function IntakeForm({ onResult, onDemoMode }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-5 py-2 rounded-lg disabled:opacity-50 transition-all shadow-minimal"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-black hover:bg-zinc-800 text-white font-medium text-xs px-5 py-2.5 rounded-lg disabled:opacity-50 transition-all shadow-sm"
           >
             {loading ? <Loader2 size={13} className="animate-spin" /> : null}
             <span>{loading ? 'Analyzing On-Chain Flow…' : 'Execute Forensics'}</span>
@@ -129,8 +131,8 @@ export default function IntakeForm({ onResult, onDemoMode }) {
       </form>
 
       {error && (
-        <div className="mt-4 flex items-center gap-2 text-xs text-zinc-200 bg-zinc-900 border border-zinc-700 rounded-lg p-3 font-mono">
-          <AlertCircle size={14} className="flex-shrink-0 text-white" />
+        <div className="mt-4 flex items-center gap-2 text-xs text-black bg-zinc-100 border border-zinc-300 rounded-lg p-3 font-mono">
+          <AlertCircle size={14} className="flex-shrink-0 text-black" />
           <span>{error}</span>
         </div>
       )}

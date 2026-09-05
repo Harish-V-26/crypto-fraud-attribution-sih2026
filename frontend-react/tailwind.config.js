@@ -4,17 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#000000',          // Pure Black
-        panel: '#09090b',       // Dark zinc card surface
-        'panel-alt': '#121215',   // Elevated card element
-        border: '#27272a',      // Subtle 1px line
-        'border-light': '#3f3f46',
-        accent: '#ffffff',      // Pure White
-        'accent-soft': '#27272a',
-        primary: '#ffffff',     // Pure White
-        'text-dim': '#a1a1aa',  // Zinc 400
+        bg: '#ffffff',          // Pure White Background
+        panel: '#ffffff',       // White card surface
+        'panel-alt': '#f4f4f5',   // Off-white / light zinc layer
+        border: '#e4e4e7',      // Light border line (zinc-200)
+        'border-light': '#d4d4d8',
+        accent: '#000000',      // Pure Black Accent
+        'accent-soft': '#f4f4f5',
+        primary: '#000000',     // Pure Black
+        'text-dim': '#52525b',  // Zinc 600
         'text-muted': '#71717a',// Zinc 500
-        'text-main': '#ffffff', // Pure White
+        'text-main': '#000000', // Pure Black Text
       },
       fontFamily: {
         sans: [
@@ -34,8 +34,8 @@ export default {
         ],
       },
       boxShadow: {
-        minimal: '0 1px 2px 0 rgba(0, 0, 0, 0.6)',
-        'minimal-lg': '0 8px 30px rgba(0, 0, 0, 0.8)',
+        minimal: '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        'minimal-lg': '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
       },
     },
   },

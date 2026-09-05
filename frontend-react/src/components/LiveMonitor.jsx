@@ -1,5 +1,5 @@
 // src/components/LiveMonitor.jsx
-// Minimalist Multi-chain Blockchain Explorer & Pre-Confirmation Screener
+// White background & Black text Multi-chain Blockchain Explorer & Pre-Confirmation Screener
 
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,14 +29,14 @@ import {
 
 function MinimalStatCard({ label, value, sub }) {
   return (
-    <div className="bg-panel-alt/50 border border-border/70 rounded-lg p-3.5">
-      <div className="text-[10.5px] uppercase tracking-wider text-text-muted font-mono mb-1">
+    <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 shadow-2xs">
+      <div className="text-[10.5px] uppercase tracking-wider text-zinc-500 font-mono mb-1 font-medium">
         {label}
       </div>
-      <div className="font-mono text-sm font-semibold text-text-main break-all">
+      <div className="font-mono text-sm font-bold text-black break-all">
         {value}
       </div>
-      {sub && <div className="text-[10px] text-text-dim mt-1 font-mono">{sub}</div>}
+      {sub && <div className="text-[10px] text-zinc-500 mt-1 font-mono">{sub}</div>}
     </div>
   )
 }
@@ -55,7 +55,7 @@ export default function LiveMonitor() {
   const [preTo, setPreTo] = useState('')
   const [preValue, setPreValue] = useState('')
 
-  const inputCls = 'bg-panel-alt/60 border border-border text-text-main font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-zinc-500 transition-colors w-full placeholder:text-zinc-600'
+  const inputCls = 'bg-zinc-50 border border-zinc-300 text-black font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-black transition-colors w-full placeholder:text-zinc-400'
 
   const run = useCallback(async (fn) => {
     setLoading(true)
@@ -136,18 +136,18 @@ export default function LiveMonitor() {
   ]
 
   return (
-    <div className="bg-panel border border-border/80 rounded-xl p-5 sm:p-6 shadow-minimal">
+    <div className="bg-white border border-zinc-200 rounded-xl p-5 sm:p-6 shadow-sm">
       
       {/* Top Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         {/* Chain Toggle */}
-        <div className="flex items-center p-0.5 rounded-lg bg-panel-alt/80 border border-border text-xs font-mono">
+        <div className="flex items-center p-0.5 rounded-lg bg-zinc-100 border border-zinc-300 text-xs font-mono">
           <button
             onClick={() => { setChain('ethereum'); setResult(null); setError(null) }}
             className={`px-3 py-1 rounded-md transition-all ${
               chain === 'ethereum'
-                ? 'bg-zinc-100 text-zinc-950 font-medium'
-                : 'text-text-dim hover:text-white'
+                ? 'bg-black text-white font-semibold shadow-xs'
+                : 'text-zinc-700 hover:text-black'
             }`}
           >
             Ethereum
@@ -156,8 +156,8 @@ export default function LiveMonitor() {
             onClick={() => { setChain('bitcoin'); setResult(null); setError(null) }}
             className={`px-3 py-1 rounded-md transition-all ${
               chain === 'bitcoin'
-                ? 'bg-zinc-100 text-zinc-950 font-medium'
-                : 'text-text-dim hover:text-white'
+                ? 'bg-black text-white font-semibold shadow-xs'
+                : 'text-zinc-700 hover:text-black'
             }`}
           >
             Bitcoin
@@ -176,10 +176,10 @@ export default function LiveMonitor() {
                 if (tab.id === 'block') queryBlockStatus()
                 if (tab.id === 'mempool') queryLiveMempool()
               }}
-              className={`text-xs font-mono px-3 py-1 rounded-md transition-colors ${
+              className={`text-xs font-mono px-3 py-1.5 rounded-md transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
-                  : 'text-text-dim hover:text-white hover:bg-panel-alt'
+                  ? 'bg-black text-white font-semibold shadow-xs'
+                  : 'text-zinc-600 hover:text-black hover:bg-zinc-100'
               }`}
             >
               {tab.label}
@@ -206,19 +206,19 @@ export default function LiveMonitor() {
               <button
                 onClick={queryAddress}
                 disabled={loading || !addressInput}
-                className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 bg-black hover:bg-zinc-800 text-white font-medium text-xs px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap shadow-xs"
               >
                 {loading ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
                 <span>Inspect</span>
               </button>
             </div>
-            <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-text-muted">
+            <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-zinc-500">
               <span>Quick tests:</span>
               <button
                 onClick={() => {
                   setAddressInput(chain === 'ethereum' ? '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' : 'bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97')
                 }}
-                className="text-zinc-300 hover:underline"
+                className="text-black font-semibold hover:underline"
               >
                 {chain === 'ethereum' ? 'vitalik.eth' : 'Binance Cold Storage'}
               </button>
@@ -227,12 +227,12 @@ export default function LiveMonitor() {
         )}
 
         {activeTab === 'block' && (
-          <div className="flex items-center justify-between text-xs text-text-dim">
+          <div className="flex items-center justify-between text-xs text-zinc-600">
             <span>Direct live telemetry from public RPC & mempool node:</span>
             <button
               onClick={queryBlockStatus}
               disabled={loading}
-              className="text-xs font-mono text-zinc-200 border border-border px-2.5 py-1 rounded-md hover:bg-panel-alt transition-colors"
+              className="text-xs font-mono text-black font-semibold border border-zinc-300 px-3 py-1 rounded-md hover:bg-zinc-100 transition-colors bg-white shadow-2xs"
             >
               Refresh Status
             </button>
@@ -240,12 +240,12 @@ export default function LiveMonitor() {
         )}
 
         {activeTab === 'mempool' && (
-          <div className="flex items-center justify-between text-xs text-text-dim">
+          <div className="flex items-center justify-between text-xs text-zinc-600">
             <span>Streaming live unconfirmed / latest block transactions:</span>
             <button
               onClick={queryLiveMempool}
               disabled={loading}
-              className="text-xs font-mono text-zinc-200 border border-border px-2.5 py-1 rounded-md hover:bg-panel-alt transition-colors"
+              className="text-xs font-mono text-black font-semibold border border-zinc-300 px-3 py-1 rounded-md hover:bg-zinc-100 transition-colors bg-white shadow-2xs"
             >
               Fetch Fresh Txs
             </button>
@@ -263,7 +263,7 @@ export default function LiveMonitor() {
             <button
               onClick={queryTx}
               disabled={loading || !txInput}
-              className="bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
+              className="bg-black hover:bg-zinc-800 text-white font-medium text-xs px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap shadow-xs"
             >
               {loading ? <Loader2 size={13} className="animate-spin" /> : 'Verify'}
             </button>
@@ -274,21 +274,21 @@ export default function LiveMonitor() {
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
-                <label className="text-[10.5px] font-mono text-text-muted mb-1 block">From Address</label>
+                <label className="text-[10.5px] font-mono text-zinc-600 mb-1 block font-medium">From Address</label>
                 <input className={inputCls} value={preFrom} onChange={(e) => setPreFrom(e.target.value)} placeholder="0x sender…" />
               </div>
               <div>
-                <label className="text-[10.5px] font-mono text-text-muted mb-1 block">To Address</label>
+                <label className="text-[10.5px] font-mono text-zinc-600 mb-1 block font-medium">To Address</label>
                 <input className={inputCls} value={preTo} onChange={(e) => setPreTo(e.target.value)} placeholder="0x recipient…" />
               </div>
               <div>
-                <label className="text-[10.5px] font-mono text-text-muted mb-1 block">Value</label>
+                <label className="text-[10.5px] font-mono text-zinc-600 mb-1 block font-medium">Value</label>
                 <input className={inputCls} value={preValue} onChange={(e) => setPreValue(e.target.value)} placeholder="Amount (e.g. 15)" type="number" />
               </div>
             </div>
             <button
               onClick={runPreCheck}
-              className="bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs px-4 py-2 rounded-lg transition-colors"
+              className="bg-black hover:bg-zinc-800 text-white font-medium text-xs px-4 py-2 rounded-lg transition-colors shadow-xs"
             >
               Run Pre-Confirmation ML Heuristic
             </button>
@@ -298,15 +298,15 @@ export default function LiveMonitor() {
 
       {/* Error */}
       {error && (
-        <div className="text-xs text-zinc-200 bg-zinc-900 border border-zinc-700 rounded-lg p-3 mb-3 font-mono">
+        <div className="text-xs text-black bg-zinc-100 border border-zinc-300 rounded-lg p-3 mb-3 font-mono">
           {error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center py-6 text-text-dim text-xs font-mono gap-2">
-          <Loader2 size={14} className="animate-spin text-white" />
+        <div className="flex items-center justify-center py-6 text-zinc-600 text-xs font-mono gap-2">
+          <Loader2 size={14} className="animate-spin text-black" />
           <span>Querying on-chain node…</span>
         </div>
       )}
@@ -336,8 +336,8 @@ export default function LiveMonitor() {
                   sub={result.is_contract ? 'Smart Contract' : 'Standard Wallet'}
                 />
               </div>
-              <div className="text-[10.5px] font-mono text-text-muted flex items-center justify-between pt-2 border-t border-border/50">
-                <span>Node: <strong className="text-zinc-300 font-normal">{result.source}</strong></span>
+              <div className="text-[10.5px] font-mono text-zinc-500 flex items-center justify-between pt-2 border-t border-zinc-200">
+                <span>Node: <strong className="text-black font-semibold">{result.source}</strong></span>
                 <span>Timestamp: {new Date(result.timestamp * 1000).toLocaleTimeString()}</span>
               </div>
             </div>
@@ -349,19 +349,19 @@ export default function LiveMonitor() {
               {result.map((tx, idx) => (
                 <div
                   key={tx.txid || idx}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-panel-alt/40 border border-border/60 text-xs font-mono hover:border-zinc-700 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-50 border border-zinc-200 text-xs font-mono hover:border-zinc-400 transition-colors shadow-2xs"
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <span className="text-text-muted text-[10px]">#{idx + 1}</span>
-                    <span className="text-zinc-300 truncate max-w-[280px]">
+                    <span className="text-zinc-400 text-[10px]">#{idx + 1}</span>
+                    <span className="text-black font-medium truncate max-w-[280px]">
                       {tx.txid ? `${tx.txid.slice(0, 16)}...${tx.txid.slice(-8)}` : 'Pending...'}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 whitespace-nowrap">
-                    <span className="text-text-main font-medium">
+                    <span className="text-black font-bold">
                       {tx.value_eth ? `${tx.value_eth} ETH` : tx.value_btc ? `${tx.value_btc} BTC` : `${tx.value_sats || 0} sat`}
                     </span>
-                    <span className="text-[10.5px] text-text-muted">
+                    <span className="text-[10.5px] text-zinc-500 font-medium">
                       {tx.fee ? `${tx.fee} sat` : 'Mined'}
                     </span>
                   </div>
@@ -375,20 +375,20 @@ export default function LiveMonitor() {
             <div
               className={`p-4 rounded-lg border font-mono ${
                 result.flagged
-                  ? 'bg-zinc-900 border-white text-white'
-                  : 'bg-zinc-950 border-zinc-700 text-zinc-200'
+                  ? 'bg-zinc-100 border-2 border-black text-black'
+                  : 'bg-zinc-50 border border-zinc-300 text-black'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 text-xs font-medium">
-                  {result.flagged ? <ShieldAlert size={16} className="text-white" /> : <ShieldCheck size={16} className="text-zinc-400" />}
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  {result.flagged ? <ShieldAlert size={16} className="text-black" /> : <ShieldCheck size={16} className="text-zinc-600" />}
                   <span>{result.flagged ? 'Flagged — Elevated Risk Probability' : 'Cleared — Normal Behavioral Pattern'}</span>
                 </div>
-                <span className="font-mono text-xs px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
+                <span className="font-mono text-xs px-2.5 py-0.5 rounded bg-black text-white font-bold">
                   Risk: {result.pre_confirmation_risk_score}/100
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 leading-relaxed font-sans">{result.recommendation}</p>
+              <p className="text-xs text-zinc-700 leading-relaxed font-sans">{result.recommendation}</p>
             </div>
           )}
 

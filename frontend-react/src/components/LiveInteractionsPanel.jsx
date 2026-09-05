@@ -1,5 +1,5 @@
 // src/components/LiveInteractionsPanel.jsx
-// Black & White Backend Request & Pipeline Interaction Stream with Payload Inspector
+// White background & Black text Backend Request & Pipeline Interaction Stream
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -105,18 +105,18 @@ export default function LiveInteractionsPanel() {
   }
 
   return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-5 font-sans">
+    <div className="bg-white border border-zinc-200 rounded-lg p-5 font-sans shadow-sm">
       
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-zinc-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-zinc-200">
         <div className="flex items-center gap-2.5">
-          <Terminal size={16} className="text-white" />
+          <Terminal size={16} className="text-black" />
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-black flex items-center gap-2">
               Request & Pipeline Telemetry
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-black live-dot" />
             </h3>
-            <p className="text-[11px] text-zinc-400 mt-0.5 font-mono">
+            <p className="text-[11px] text-zinc-600 mt-0.5 font-mono">
               Live logging of API calls, forensic pipeline execution, and latency benchmarks
             </p>
           </div>
@@ -124,19 +124,19 @@ export default function LiveInteractionsPanel() {
 
         {/* Stats Pill Badges */}
         <div className="flex items-center gap-2 font-mono text-xs">
-          <div className="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-zinc-300">
-            Latency: <strong className="text-white font-semibold">{stats.avgLatency}ms</strong>
+          <div className="px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-300 text-zinc-800">
+            Latency: <strong className="text-black font-semibold">{stats.avgLatency}ms</strong>
           </div>
-          <div className="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-zinc-300">
-            WS Clients: <strong className="text-white font-semibold">{stats.activeWs}</strong>
+          <div className="px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-300 text-zinc-800">
+            WS Clients: <strong className="text-black font-semibold">{stats.activeWs}</strong>
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsPaused((p) => !p)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors shadow-2xs ${
                 isPaused
-                  ? 'bg-zinc-800 border-zinc-600 text-white'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800'
+                  ? 'bg-black border-black text-white'
+                  : 'bg-zinc-100 border-zinc-300 text-black hover:bg-zinc-200'
               }`}
               title={isPaused ? 'Resume stream' : 'Pause stream'}
             >
@@ -145,7 +145,7 @@ export default function LiveInteractionsPanel() {
             </button>
             <button
               onClick={() => setInteractions([])}
-              className="p-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
+              className="p-1.5 rounded-md bg-zinc-100 border border-zinc-300 text-zinc-600 hover:text-black hover:border-zinc-400 transition-colors shadow-2xs"
               title="Clear interaction log"
             >
               <Trash2 size={12} />
@@ -162,8 +162,8 @@ export default function LiveInteractionsPanel() {
             onClick={() => setActiveCategory(cat.id)}
             className={`px-2.5 py-1 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
               activeCategory === cat.id
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800'
+                ? 'bg-black text-white font-semibold shadow-xs'
+                : 'bg-zinc-100 text-zinc-700 hover:text-black hover:bg-zinc-200 border border-zinc-200'
             }`}
           >
             {cat.label}
@@ -174,42 +174,42 @@ export default function LiveInteractionsPanel() {
       {/* Interaction Stream List / Console */}
       <div
         ref={terminalRef}
-        className="bg-black border border-zinc-800 rounded-lg overflow-hidden font-mono text-xs max-h-[360px] overflow-y-auto"
+        className="bg-zinc-50 border border-zinc-200 rounded-lg overflow-hidden font-mono text-xs max-h-[360px] overflow-y-auto"
       >
         {filtered.length === 0 ? (
-          <div className="py-12 text-center text-zinc-400 text-xs">
-            <Activity size={20} className="mx-auto mb-2 opacity-40 animate-pulse text-white" />
+          <div className="py-12 text-center text-zinc-500 text-xs">
+            <Activity size={20} className="mx-auto mb-2 opacity-60 animate-pulse text-black" />
             Listening for backend interactions... Trigger wallet traces to inspect telemetry.
           </div>
         ) : (
-          <div className="divide-y divide-zinc-900">
+          <div className="divide-y divide-zinc-200">
             {filtered.map((item) => {
               const sc = item.status_code || 200
               const isOk = sc < 400
               const methodColor =
                 item.method === 'POST'
-                  ? 'text-white bg-zinc-800 border-zinc-600 font-bold'
+                  ? 'text-white bg-black border-black font-bold'
                   : item.method === 'GET'
-                  ? 'text-zinc-300 bg-zinc-900 border-zinc-700'
-                  : 'text-zinc-200 bg-zinc-800 border-zinc-600'
+                  ? 'text-black bg-zinc-200 border-zinc-300 font-semibold'
+                  : 'text-zinc-900 bg-zinc-100 border-zinc-300 font-semibold'
 
               return (
                 <div
                   key={item.id}
                   onClick={() => setSelectedInteraction(item)}
-                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 p-2.5 hover:bg-zinc-900/60 cursor-pointer transition-colors group"
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 p-2.5 hover:bg-zinc-100/90 cursor-pointer transition-colors group"
                 >
                   {/* Left: Method, Path, Timestamp */}
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-[10px] text-zinc-400 whitespace-nowrap">{item.timestamp}</span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${methodColor}`}>
+                    <span className="text-[10px] text-zinc-500 whitespace-nowrap">{item.timestamp}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${methodColor}`}>
                       {item.method}
                     </span>
-                    <span className="text-zinc-200 truncate max-w-[240px] sm:max-w-[360px] group-hover:text-white transition-colors font-medium">
+                    <span className="text-black truncate max-w-[240px] sm:max-w-[360px] group-hover:underline transition-colors font-medium">
                       {item.path}
                     </span>
                     {item.query && (
-                      <span className="text-[10.5px] text-zinc-400 hidden md:inline truncate max-w-[150px]">
+                      <span className="text-[10.5px] text-zinc-500 hidden md:inline truncate max-w-[150px]">
                         ?{item.query}
                       </span>
                     )}
@@ -217,17 +217,17 @@ export default function LiveInteractionsPanel() {
 
                   {/* Right: Latency, Status Code, Category Badge */}
                   <div className="flex items-center gap-2.5">
-                    <span className="text-[10.5px] text-zinc-400">{item.elapsed_ms}ms</span>
+                    <span className="text-[10.5px] text-zinc-600 font-medium">{item.elapsed_ms}ms</span>
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium ${
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
                         isOk
-                          ? 'text-zinc-300 bg-zinc-900 border border-zinc-700'
-                          : 'text-black bg-white border border-white font-bold'
+                          ? 'text-black bg-zinc-200 border border-zinc-300'
+                          : 'text-white bg-black border border-black'
                       }`}
                     >
                       {sc}
                     </span>
-                    <span className="text-[10px] text-zinc-400 uppercase px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hidden sm:inline">
+                    <span className="text-[10px] text-zinc-600 uppercase px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200 hidden sm:inline font-medium">
                       {item.category}
                     </span>
                   </div>
@@ -245,30 +245,30 @@ export default function LiveInteractionsPanel() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
           >
             <motion.div
               initial={{ scale: 0.96, y: 8 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 8 }}
-              className="bg-zinc-950 border border-zinc-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-white border border-zinc-300 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900">
+              <div className="flex items-center justify-between p-4 border-b border-zinc-200 bg-zinc-50">
                 <div className="flex items-center gap-2 font-mono text-xs">
-                  <span className="px-2 py-0.5 rounded bg-white text-black font-bold">
+                  <span className="px-2 py-0.5 rounded bg-black text-white font-bold">
                     {selectedInteraction.method}
                   </span>
-                  <span className="text-white font-semibold truncate max-w-[340px]">
+                  <span className="text-black font-semibold truncate max-w-[340px]">
                     {selectedInteraction.path}
                   </span>
-                  <span className="text-zinc-300 font-bold ml-1 font-mono">
+                  <span className="text-black font-bold ml-1 font-mono">
                     [{selectedInteraction.status_code}]
                   </span>
                 </div>
                 <button
                   onClick={() => setSelectedInteraction(null)}
-                  className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                  className="p-1 rounded text-zinc-500 hover:text-black hover:bg-zinc-200 transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -278,38 +278,38 @@ export default function LiveInteractionsPanel() {
               <div className="p-4 space-y-4 overflow-y-auto font-mono text-xs">
                 {/* Telemetry metadata */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                  <div className="p-2.5 rounded bg-black border border-zinc-800">
-                    <span className="text-zinc-400 block mb-0.5 text-[10px]">REQUEST ID</span>
-                    <strong className="text-zinc-200 break-all font-mono font-medium">{selectedInteraction.id}</strong>
+                  <div className="p-2.5 rounded bg-zinc-50 border border-zinc-200">
+                    <span className="text-zinc-500 block mb-0.5 text-[10px] font-semibold">REQUEST ID</span>
+                    <strong className="text-black break-all font-mono font-medium">{selectedInteraction.id}</strong>
                   </div>
-                  <div className="p-2.5 rounded bg-black border border-zinc-800">
-                    <span className="text-zinc-400 block mb-0.5 text-[10px]">TIMESTAMP</span>
-                    <strong className="text-zinc-200 font-medium">{selectedInteraction.timestamp}</strong>
+                  <div className="p-2.5 rounded bg-zinc-50 border border-zinc-200">
+                    <span className="text-zinc-500 block mb-0.5 text-[10px] font-semibold">TIMESTAMP</span>
+                    <strong className="text-black font-medium">{selectedInteraction.timestamp}</strong>
                   </div>
-                  <div className="p-2.5 rounded bg-black border border-zinc-800">
-                    <span className="text-zinc-400 block mb-0.5 text-[10px]">LATENCY</span>
-                    <strong className="text-white font-medium">{selectedInteraction.elapsed_ms} ms</strong>
+                  <div className="p-2.5 rounded bg-zinc-50 border border-zinc-200">
+                    <span className="text-zinc-500 block mb-0.5 text-[10px] font-semibold">LATENCY</span>
+                    <strong className="text-black font-bold">{selectedInteraction.elapsed_ms} ms</strong>
                   </div>
-                  <div className="p-2.5 rounded bg-black border border-zinc-800">
-                    <span className="text-zinc-400 block mb-0.5 text-[10px]">CLIENT IP</span>
-                    <strong className="text-zinc-200 font-medium">{selectedInteraction.client_ip}</strong>
+                  <div className="p-2.5 rounded bg-zinc-50 border border-zinc-200">
+                    <span className="text-zinc-500 block mb-0.5 text-[10px] font-semibold">CLIENT IP</span>
+                    <strong className="text-black font-medium">{selectedInteraction.client_ip}</strong>
                   </div>
                 </div>
 
                 {/* Request Payload */}
                 {selectedInteraction.request_preview && (
                   <div>
-                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-zinc-400">
+                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-zinc-600 font-semibold">
                       <span>Request Payload</span>
                       <button
                         onClick={() => copyToClipboard(selectedInteraction.request_preview, 'req')}
-                        className="flex items-center gap-1 text-zinc-300 hover:text-white"
+                        className="flex items-center gap-1 text-black hover:underline"
                       >
                         {copiedField === 'req' ? <Check size={11} /> : <Copy size={11} />}
                         {copiedField === 'req' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
-                    <pre className="p-3 rounded-md bg-black border border-zinc-800 text-zinc-300 text-[11px] overflow-x-auto whitespace-pre-wrap max-h-40">
+                    <pre className="p-3 rounded-md bg-zinc-50 border border-zinc-200 text-black text-[11px] overflow-x-auto whitespace-pre-wrap max-h-40">
                       {selectedInteraction.request_preview}
                     </pre>
                   </div>
@@ -318,17 +318,17 @@ export default function LiveInteractionsPanel() {
                 {/* Response Payload */}
                 {selectedInteraction.response_preview && (
                   <div>
-                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-zinc-400">
+                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-zinc-600 font-semibold">
                       <span>Response Payload</span>
                       <button
                         onClick={() => copyToClipboard(selectedInteraction.response_preview, 'resp')}
-                        className="flex items-center gap-1 text-zinc-300 hover:text-white"
+                        className="flex items-center gap-1 text-black hover:underline"
                       >
                         {copiedField === 'resp' ? <Check size={11} /> : <Copy size={11} />}
                         {copiedField === 'resp' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
-                    <pre className="p-3 rounded-md bg-black border border-zinc-800 text-zinc-300 text-[11px] overflow-x-auto whitespace-pre-wrap max-h-48">
+                    <pre className="p-3 rounded-md bg-zinc-50 border border-zinc-200 text-black text-[11px] overflow-x-auto whitespace-pre-wrap max-h-48">
                       {selectedInteraction.response_preview}
                     </pre>
                   </div>
@@ -336,10 +336,10 @@ export default function LiveInteractionsPanel() {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-3 border-t border-zinc-800 bg-zinc-900 flex justify-end">
+              <div className="p-3 border-t border-zinc-200 bg-zinc-50 flex justify-end">
                 <button
                   onClick={() => setSelectedInteraction(null)}
-                  className="px-4 py-1.5 rounded-md text-xs font-medium bg-white text-black hover:bg-zinc-200 transition-all font-semibold"
+                  className="px-4 py-1.5 rounded-md text-xs font-semibold bg-black text-white hover:bg-zinc-800 transition-all shadow-xs"
                 >
                   Close Inspector
                 </button>

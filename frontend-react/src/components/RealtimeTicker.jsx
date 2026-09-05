@@ -1,5 +1,5 @@
 // src/components/RealtimeTicker.jsx
-// Minimalist real-time market ticker & gas telemetry strip
+// White background & Black text real-time market ticker & gas telemetry strip
 
 import { useState, useEffect } from 'react'
 import { Globe, Layers } from 'lucide-react'
@@ -59,35 +59,34 @@ export default function RealtimeTicker() {
   const ethGas = gasData?.ethereum?.standard || gasData?.ethereum?.slow || 14
   const btcFee = gasData?.bitcoin?.fastest || gasData?.bitcoin?.half_hour || 18
   const ethBlock = blockStatus?.networks?.ethereum?.block_height || 20854320
-  const btcBlock = blockStatus?.networks?.bitcoin?.block_height || 965574
 
   return (
-    <div className="w-full bg-panel/60 border-b border-border/50 text-[11px] font-mono text-text-dim px-4 sm:px-6 py-2 select-none backdrop-blur-sm">
+    <div className="w-full bg-zinc-50 border-b border-zinc-200 text-[11px] font-mono text-zinc-600 px-4 sm:px-6 py-2 select-none">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-2 gap-x-6">
         
         {/* Left: Stream Indicator & Currency Switch */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-zinc-400">
+          <div className="flex items-center gap-1.5 text-zinc-700">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
                 wsStatus === 'connected'
-                  ? 'bg-white shadow-[0_0_5px_rgba(255,255,255,0.8)]'
+                  ? 'bg-black shadow-[0_0_4px_rgba(0,0,0,0.5)]'
                   : wsStatus === 'connecting'
                   ? 'bg-zinc-400 animate-pulse'
-                  : 'bg-zinc-600'
+                  : 'bg-zinc-300'
               }`}
             />
-            <span className="text-[10px] tracking-wider uppercase">
+            <span className="text-[10px] tracking-wider uppercase font-semibold text-black">
               {wsStatus === 'connected' ? 'LIVE' : 'SYNC'}
             </span>
           </div>
 
           <button
             onClick={() => setCurrency(c => (c === 'USD' ? 'INR' : 'USD'))}
-            className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border/80 text-zinc-300 hover:text-white hover:bg-panel-alt transition-colors"
+            className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-zinc-300 bg-white text-black hover:bg-zinc-100 transition-colors shadow-xs font-semibold"
             title="Toggle USD / INR Currency"
           >
-            <Globe size={10} className="text-zinc-400" />
+            <Globe size={10} className="text-zinc-500" />
             <span>{currency}</span>
           </button>
         </div>
@@ -103,9 +102,9 @@ export default function RealtimeTicker() {
 
             return (
               <div key={coin.symbol} className="flex items-center gap-1.5 whitespace-nowrap">
-                <span className="text-zinc-400 font-medium">{coin.symbol}</span>
-                <span className="text-zinc-100 font-medium">{priceStr}</span>
-                <span className="text-[9.5px] font-mono text-zinc-400">
+                <span className="text-zinc-500 font-semibold">{coin.symbol}</span>
+                <span className="text-black font-bold">{priceStr}</span>
+                <span className="text-[9.5px] font-mono text-zinc-600">
                   {isPos ? '+' : ''}{coin.change_24h}%
                 </span>
               </div>
@@ -114,24 +113,24 @@ export default function RealtimeTicker() {
         </div>
 
         {/* Right: Minimalist Gas & Blocks */}
-        <div className="flex items-center gap-3 text-text-muted">
+        <div className="flex items-center gap-3 text-zinc-600">
           <div className="flex items-center gap-1.5">
             <span>ETH Gas</span>
-            <span className="text-zinc-300 font-medium">{ethGas} Gwei</span>
+            <span className="text-black font-semibold">{ethGas} Gwei</span>
           </div>
 
-          <span className="text-border">·</span>
+          <span className="text-zinc-300">·</span>
 
           <div className="flex items-center gap-1.5">
             <span>BTC Fee</span>
-            <span className="text-zinc-300 font-medium">{btcFee} sat/vB</span>
+            <span className="text-black font-semibold">{btcFee} sat/vB</span>
           </div>
 
-          <span className="hidden lg:inline text-border">·</span>
+          <span className="hidden lg:inline text-zinc-300">·</span>
 
           <div className="hidden lg:flex items-center gap-1.5">
-            <Layers size={11} className="text-zinc-500" />
-            <span>#{ethBlock}</span>
+            <Layers size={11} className="text-zinc-400" />
+            <span className="text-black font-medium">#{ethBlock}</span>
           </div>
         </div>
 

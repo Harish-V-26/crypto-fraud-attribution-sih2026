@@ -1,18 +1,18 @@
 // src/components/NetworkGraph.jsx
-// Black & White interactive force-directed network graph for transaction flow visualization
+// White background & Black text interactive force-directed network graph
 
 import { useRef, useCallback, useEffect, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import { ZoomIn, ZoomOut, Maximize2, RefreshCw } from 'lucide-react'
 
-// Node type styles - Pure Black & White monochrome palette
+// Node type styles - Light mode stark monochrome palette
 const NODE_COLORS = {
-  source:   { fill: '#ffffff', stroke: '#71717a', label: '#000000' },
-  layering: { fill: '#3f3f46', stroke: '#71717a', label: '#ffffff' },
-  mixer:    { fill: '#f4f4f5', stroke: '#000000', label: '#000000' },
-  exchange: { fill: '#ffffff', stroke: '#27272a', label: '#000000' },
-  bridge:   { fill: '#a1a1aa', stroke: '#27272a', label: '#000000' },
-  defi:     { fill: '#71717a', stroke: '#ffffff', label: '#ffffff' },
+  source:   { fill: '#000000', stroke: '#3f3f46', label: '#ffffff' },
+  layering: { fill: '#f4f4f5', stroke: '#a1a1aa', label: '#000000' },
+  mixer:    { fill: '#18181b', stroke: '#000000', label: '#ffffff' },
+  exchange: { fill: '#000000', stroke: '#71717a', label: '#ffffff' },
+  bridge:   { fill: '#52525b', stroke: '#000000', label: '#ffffff' },
+  defi:     { fill: '#e4e4e7', stroke: '#27272a', label: '#000000' },
 }
 
 const EDGE_LABELS = {
@@ -94,10 +94,10 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     const isHovered = hoveredNode?.id === node.id
     const r = isSelected ? 22 : (isHovered ? 19 : 16)
 
-    // Clean monochrome highlight
+    // Highlight
     if (isSelected || isHovered) {
-      ctx.shadowColor = '#ffffff'
-      ctx.shadowBlur = isSelected ? 18 : 8
+      ctx.shadowColor = '#000000'
+      ctx.shadowBlur = isSelected ? 16 : 8
     } else {
       ctx.shadowBlur = 0
     }
@@ -131,8 +131,8 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
 
     ctx.fillStyle = config.fill
     ctx.fill()
-    ctx.strokeStyle = isSelected ? '#ffffff' : config.stroke
-    ctx.lineWidth = isSelected ? 2.5 : 1.2
+    ctx.strokeStyle = isSelected ? '#000000' : config.stroke
+    ctx.lineWidth = isSelected ? 3 : 1.5
     ctx.stroke()
     ctx.shadowBlur = 0
 
@@ -153,8 +153,8 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     if (!start || !end) return
 
     ctx.beginPath()
-    ctx.strokeStyle = '#3f3f46'
-    ctx.lineWidth = 1.2
+    ctx.strokeStyle = '#d4d4d8'
+    ctx.lineWidth = 1.5
     ctx.setLineDash([])
     ctx.moveTo(start.x, start.y)
     ctx.lineTo(end.x, end.y)
@@ -172,7 +172,7 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
     const arrowY = end.y - (dy / dist) * 19
 
     ctx.beginPath()
-    ctx.fillStyle = '#a1a1aa'
+    ctx.fillStyle = '#000000'
     ctx.moveTo(arrowX, arrowY)
     ctx.lineTo(
       arrowX - arrowLen * Math.cos(angle - arrowAngle),
@@ -187,10 +187,10 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
 
   if (!graphData || fgData.nodes.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[420px] bg-black rounded-lg border border-zinc-800 border-dashed">
-        <div className="text-center text-zinc-400 font-mono text-xs">
-          <div className="text-2xl mb-2 text-white">◈</div>
-          <div>Network graph will render here upon case investigation</div>
+      <div className="flex items-center justify-center h-[420px] bg-zinc-50 rounded-lg border border-zinc-300 border-dashed">
+        <div className="text-center text-zinc-500 font-mono text-xs">
+          <div className="text-2xl mb-2 text-black">◈</div>
+          <div className="text-zinc-700 font-medium">Network graph will render here upon case investigation</div>
         </div>
       </div>
     )
@@ -210,7 +210,7 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
             key={i}
             onClick={action}
             title={tip}
-            className="p-1.5 rounded-md bg-zinc-900/90 border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shadow-sm"
+            className="p-1.5 rounded-md bg-white/95 border border-zinc-300 text-zinc-700 hover:text-black hover:bg-zinc-100 transition-colors shadow-xs"
           >
             {icon}
           </button>
@@ -218,23 +218,25 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
       </div>
 
       {/* Legend */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 bg-black/90 p-2.5 rounded-md border border-zinc-800 backdrop-blur-xs">
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 bg-white/95 p-2.5 rounded-md border border-zinc-200 shadow-2xs backdrop-blur-xs">
         {Object.entries(EDGE_LABELS).map(([type, label]) => (
-          <div key={type} className="flex items-center gap-1.5 text-[10px] font-mono">
-            <span style={{ color: NODE_COLORS[type].fill }}>{label.split(' ')[0]}</span>
-            <span className="text-zinc-400 capitalize">{type}</span>
+          <div key={type} className="flex items-center gap-1.5 text-[10px] font-mono font-medium">
+            <span style={{ color: NODE_COLORS[type].fill === '#ffffff' ? '#000000' : NODE_COLORS[type].fill }}>
+              {label.split(' ')[0]}
+            </span>
+            <span className="text-zinc-700 capitalize">{type}</span>
           </div>
         ))}
       </div>
 
       {/* Graph */}
-      <div ref={containerRef} className="overflow-hidden rounded-lg border border-zinc-800 bg-black">
+      <div ref={containerRef} className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
         <ForceGraph2D
           ref={graphRef}
           graphData={fgData}
           width={dimensions.width}
           height={dimensions.height}
-          backgroundColor="#000000"
+          backgroundColor="#ffffff"
           nodeCanvasObject={paintNode}
           nodeCanvasObjectMode={() => 'replace'}
           linkCanvasObject={paintLink}
@@ -251,18 +253,18 @@ export default function NetworkGraph({ graphData, onNodeClick }) {
 
       {/* Selected node info */}
       {selectedNode && (
-        <div className="mt-3 p-3 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono">
+        <div className="mt-3 p-3 bg-zinc-50 border border-zinc-300 rounded-lg text-xs font-mono shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-semibold text-white">{selectedNode.label}</span>
-              <span className="ml-2 text-zinc-400 capitalize">({selectedNode.type})</span>
+              <span className="font-bold text-black">{selectedNode.label}</span>
+              <span className="ml-2 text-zinc-600 capitalize">({selectedNode.type})</span>
             </div>
             <button
               onClick={() => setSelectedNode(null)}
-              className="text-zinc-400 hover:text-white"
+              className="text-zinc-500 hover:text-black font-bold"
             >✕</button>
           </div>
-          <div className="text-[11px] text-zinc-400 mt-1 break-all">{selectedNode.id}</div>
+          <div className="text-[11px] text-zinc-600 mt-1 break-all">{selectedNode.id}</div>
         </div>
       )}
     </div>

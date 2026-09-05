@@ -1,5 +1,5 @@
 // src/components/Dashboard.jsx
-// Black & White investigator stats dashboard with monochrome Chart.js
+// White background & Black text investigator stats dashboard with monochrome Chart.js
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -18,12 +18,12 @@ const CHART_DEFAULTS = {
   responsive: true,
   maintainAspectRatio: true,
   plugins: { 
-    legend: { labels: { color: '#a1a1aa', font: { family: 'JetBrains Mono', size: 10 } } },
+    legend: { labels: { color: '#52525b', font: { family: 'JetBrains Mono', size: 10 } } },
     tooltip: {
-      backgroundColor: '#000000',
-      titleColor: '#ffffff',
-      bodyColor: '#a1a1aa',
-      borderColor: '#3f3f46',
+      backgroundColor: '#ffffff',
+      titleColor: '#000000',
+      bodyColor: '#52525b',
+      borderColor: '#d4d4d8',
       borderWidth: 1,
       padding: 8,
       cornerRadius: 6,
@@ -31,12 +31,12 @@ const CHART_DEFAULTS = {
   },
   scales: {
     x: { 
-      ticks: { color: '#a1a1aa', font: { family: 'JetBrains Mono', size: 10 } }, 
-      grid: { color: '#27272a', drawBorder: false } 
+      ticks: { color: '#52525b', font: { family: 'JetBrains Mono', size: 10 } }, 
+      grid: { color: '#f4f4f5', drawBorder: false } 
     },
     y: { 
-      ticks: { color: '#a1a1aa', font: { family: 'JetBrains Mono', size: 10 } }, 
-      grid: { color: '#27272a', drawBorder: false }, 
+      ticks: { color: '#52525b', font: { family: 'JetBrains Mono', size: 10 } }, 
+      grid: { color: '#f4f4f5', drawBorder: false }, 
       beginAtZero: true 
     },
   },
@@ -47,18 +47,18 @@ function StatCard({ label, value, sub, icon: Icon }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-center flex flex-col justify-between"
+      className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 text-center flex flex-col justify-between shadow-2xs"
     >
       <div>
-        <div className="flex items-center justify-center gap-1 text-[10.5px] font-mono text-zinc-400 uppercase tracking-wider mb-1">
-          {Icon && <Icon size={12} className="text-zinc-400" />}
+        <div className="flex items-center justify-center gap-1 text-[10.5px] font-mono text-zinc-600 uppercase tracking-wider mb-1 font-semibold">
+          {Icon && <Icon size={12} className="text-zinc-600" />}
           <span>{label}</span>
         </div>
-        <div className="font-mono font-bold text-2xl text-white mt-1">
+        <div className="font-mono font-bold text-2xl text-black mt-1">
           {value}
         </div>
       </div>
-      {sub && <div className="text-[10px] text-zinc-400 mt-1.5 font-mono">{sub}</div>}
+      {sub && <div className="text-[10px] text-zinc-500 mt-1.5 font-mono">{sub}</div>}
     </motion.div>
   )
 }
@@ -74,12 +74,12 @@ export default function Dashboard({ refreshKey }) {
   }, [refreshKey])
 
   if (!stats) return (
-    <div className="text-center text-zinc-400 text-xs py-10 font-mono">Loading dashboard metrics…</div>
+    <div className="text-center text-zinc-500 text-xs py-10 font-mono">Loading dashboard metrics…</div>
   )
 
-  // Pure Black & White Monochrome Grayscale Palette
-  const riskColors = ['#52525b', '#71717a', '#d4d4d8', '#ffffff']
-  const exchangeColors = ['#ffffff', '#e4e4e7', '#a1a1aa', '#71717a', '#3f3f46']
+  // White background & Black text monochrome colors
+  const riskColors = ['#d4d4d8', '#a1a1aa', '#52525b', '#000000']
+  const exchangeColors = ['#000000', '#27272a', '#52525b', '#71717a', '#a1a1aa']
   const topTyp = Object.entries(stats.typology_distribution || {}).sort((a, b) => b[1] - a[1])[0]
   const topEx  = (stats.top_exchanges || [])[0]
 
@@ -99,7 +99,7 @@ export default function Dashboard({ refreshKey }) {
       data: stats.top_exchanges?.map(([, v]) => v) || [1],
       backgroundColor: exchangeColors,
       borderWidth: 1,
-      borderColor: '#000000',
+      borderColor: '#ffffff',
     }],
   }
 
@@ -107,8 +107,7 @@ export default function Dashboard({ refreshKey }) {
     labels: Object.keys(stats.typology_distribution || { 'No data': 0 }),
     datasets: [{
       data: Object.values(stats.typology_distribution || { 'No data': 0 }),
-      backgroundColor: '#71717a',
-      hoverBackgroundColor: '#ffffff',
+      backgroundColor: '#000000',
       borderRadius: 4,
       borderSkipped: false,
     }],
@@ -118,15 +117,15 @@ export default function Dashboard({ refreshKey }) {
     labels: ['Cross-chain detected', 'Single-chain only'],
     datasets: [{
       data: [stats.bridge_detected_count || 0, (stats.total_cases || 0) - (stats.bridge_detected_count || 0)],
-      backgroundColor: ['#ffffff', '#27272a'],
+      backgroundColor: ['#000000', '#e4e4e7'],
       borderWidth: 1,
-      borderColor: '#000000',
+      borderColor: '#ffffff',
     }],
   }
 
   const noScales = { 
     plugins: { 
-      legend: { labels: { color: '#a1a1aa', font: { family: 'JetBrains Mono', size: 10 } } },
+      legend: { labels: { color: '#52525b', font: { family: 'JetBrains Mono', size: 10 } } },
       tooltip: CHART_DEFAULTS.plugins.tooltip,
     } 
   }
@@ -134,8 +133,8 @@ export default function Dashboard({ refreshKey }) {
   return (
     <div className="space-y-4 font-sans">
       {useMock && (
-        <div className="text-[11px] font-mono text-zinc-300 bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-md inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+        <div className="text-[11px] font-mono text-black bg-zinc-100 border border-zinc-300 px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-black live-dot" />
           Offline fallback — displaying illustrative metrics
         </div>
       )}
@@ -154,8 +153,8 @@ export default function Dashboard({ refreshKey }) {
 
       {/* Charts grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wider text-black mb-3">
             Cases by Risk Band
           </div>
           <Bar
@@ -167,8 +166,8 @@ export default function Dashboard({ refreshKey }) {
           />
         </div>
 
-        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wider text-black mb-3">
             Exchange Attributions
           </div>
           <Doughnut
@@ -177,8 +176,8 @@ export default function Dashboard({ refreshKey }) {
           />
         </div>
 
-        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wider text-black mb-3">
             Typology Distribution
           </div>
           <Bar
@@ -190,8 +189,8 @@ export default function Dashboard({ refreshKey }) {
           />
         </div>
 
-        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wider text-black mb-3">
             Cross-Chain Bridge Activity
           </div>
           <Doughnut

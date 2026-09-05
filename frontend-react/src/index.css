@@ -5,14 +5,14 @@
 @tailwind utilities;
 
 :root {
-  --bg: #000000;
-  --panel: #09090b;
-  --panel-alt: #121215;
-  --border: #27272a;
-  --text: #ffffff;
-  --text-dim: #a1a1aa;
-  --accent: #ffffff;
-  --accent-soft: #27272a;
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel-alt: #f4f4f5;
+  --border: #e4e4e7;
+  --text: #000000;
+  --text-dim: #52525b;
+  --accent: #000000;
+  --accent-soft: #f4f4f5;
 }
 
 * {
@@ -21,34 +21,34 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: #000000;
-  color-scheme: dark;
+  background-color: #ffffff;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #000000;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Minimalist sleek monochrome scrollbar */
+/* Minimalist light scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #d4d4d8;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #a1a1aa;
 }
 
 /* Graph canvas override */
@@ -56,34 +56,36 @@ body {
   border-radius: 8px;
 }
 
-/* Black & White Risk Badges */
+/* High-contrast Black and White Badges */
 .badge-low {
-  background: #18181b;
-  color: #a1a1aa;
-  border: 1px solid #3f3f46;
+  background: #f4f4f5;
+  color: #52525b;
+  border: 1px solid #d4d4d8;
+  font-weight: 500;
 }
 .badge-medium {
-  background: #27272a;
-  color: #e4e4e7;
-  border: 1px solid #52525b;
+  background: #e4e4e7;
+  color: #18181b;
+  border: 1px solid #a1a1aa;
+  font-weight: 600;
 }
 .badge-high {
-  background: #e4e4e7;
-  color: #09090b;
-  border: 1px solid #ffffff;
+  background: #27272a;
+  color: #ffffff;
+  border: 1px solid #000000;
   font-weight: 600;
 }
 .badge-critical {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #ffffff;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
   font-weight: 700;
 }
 
-/* Pulse dot - monochrome */
+/* Pulse dot - black & white */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 0.3; transform: scale(0.9); }
 }
 .live-dot {
   animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;

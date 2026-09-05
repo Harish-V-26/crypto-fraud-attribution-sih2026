@@ -1,4 +1,4 @@
-const API = "http://localhost:8000";
+const API = `http://${window.location.hostname || 'localhost'}:8000`;
 
 const SAMPLES = [
   { label: "BTC sample", addr: "1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF", chain: "bitcoin" },

@@ -11,7 +11,7 @@
  *   BlockchainUniverse — main scene orchestrator
  */
 
-const API = 'http://localhost:8000';
+const API = `http://${window.location.hostname || 'localhost'}:8000`;
 
 /* ──────────────────────────── CONSTANTS ──────────────────────────────────── */
 const C = {

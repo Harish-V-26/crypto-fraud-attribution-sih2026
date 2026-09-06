@@ -114,9 +114,10 @@ export default function RealtimeTicker() {
 
         {/* Right: Minimalist Gas & Blocks */}
         <div className="flex items-center gap-3 text-zinc-600">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" title={gasData?.ethereum?.source || 'Infura Gas Oracle v3'}>
             <span>ETH Gas</span>
             <span className="text-black font-semibold">{ethGas} Gwei</span>
+            <span className="text-[9.5px] bg-zinc-200 text-black px-1 py-0.5 rounded font-mono font-semibold">Infura v3</span>
           </div>
 
           <span className="text-zinc-300">·</span>

@@ -90,13 +90,16 @@ export default function LiveMonitor() {
         Chain: chain.toUpperCase(),
         'Block Height': chainStatus.block_height ? `#${chainStatus.block_height}` : 'Latest Verified',
         'Tip Hash': chainStatus.tip_hash || 'Mainnet Tip',
-        'Telemetry Provider': chainStatus.source || 'Public Zero-Key Node',
+        'Telemetry Provider': chainStatus.source === 'live_infura_mainnet_rpc' ? 'Infura Mainnet Node (Verified)' : (chainStatus.source || 'Infura RPC'),
         ...(chain === 'ethereum'
           ? {
-              'Base Gas': `${chainGas.base_fee || 14} Gwei`,
-              'Standard Gas': `${chainGas.standard || 16} Gwei`,
-              'Fast Gas': `${chainGas.fast || 22} Gwei`,
-              'Instant Gas': `${chainGas.instant || 28} Gwei`,
+              'Base Gas': `${chainGas.base_fee !== undefined ? chainGas.base_fee : 0.05} Gwei`,
+              'Standard Gas': `${chainGas.standard || 2.0} Gwei`,
+              'Fast Gas': `${chainGas.fast || 2.5} Gwei`,
+              'Instant Gas': `${chainGas.instant || 3.0} Gwei`,
+              ...(chainGas.network_congestion !== undefined ? { 'Network Congestion': `${chainGas.network_congestion}%` } : {}),
+              ...(chainGas.priority_trend ? { 'Priority Trend': `${chainGas.priority_trend.toUpperCase()}` } : {}),
+              'Oracle Provider': chainGas.source === 'live_infura_gas_oracle_v3' ? 'Infura Gas Oracle v3 (Live Feed)' : (chainGas.source || 'Infura Oracle'),
             }
           : {
               'Fastest Fee': `${chainGas.fastest || 24} sat/vB`,

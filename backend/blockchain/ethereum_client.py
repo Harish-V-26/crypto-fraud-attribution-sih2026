@@ -7,6 +7,7 @@ Uses multi-source live querying:
   4. Resilient simulation fallback (demo never fails)
 """
 import os
+import asyncio
 import httpx
 from typing import Optional
 from .mock_data import get_mock_eth_address_txs
@@ -14,6 +15,8 @@ from .mock_data import get_mock_eth_address_txs
 ETHERSCAN_BASE_URL = "https://api.etherscan.io/api"
 ETHERSCAN_API_KEY = os.environ.get("ETHERSCAN_API_KEY", "")
 BLOCKSCOUT_BASE_URL = "https://eth.blockscout.com/api/v2"
+INFURA_API_KEY = os.environ.get("INFURA_API_KEY", "df8938f6d4cd4cb084746f5cb77818a7")
+INFURA_RPC_URL = f"https://mainnet.infura.io/v3/{INFURA_API_KEY}"
 
 
 async def get_address_transactions(address: str, limit: int = 25) -> dict:
@@ -85,3 +88,27 @@ async def get_address_transactions(address: str, limit: int = 25) -> dict:
         "fallback_reason": "Live providers unavailable or demo address",
         "txs": get_mock_eth_address_txs(address),
     }
+
+
+async def get_address_balance_infura(address: str) -> dict:
+    """Fetch live on-chain balance and nonce from Infura Mainnet RPC."""
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            bal_payload = {"jsonrpc": "2.0", "method": "eth_getBalance", "params": [address, "latest"], "id": 1}
+            tx_payload = {"jsonrpc": "2.0", "method": "eth_getTransactionCount", "params": [address, "latest"], "id": 2}
+            r1, r2 = await asyncio.gather(
+                client.post(INFURA_RPC_URL, json=bal_payload),
+                client.post(INFURA_RPC_URL, json=tx_payload),
+                return_exceptions=True
+            )
+            bal_wei = int(r1.json().get("result", "0x0"), 16) if isinstance(r1, httpx.Response) and r1.status_code == 200 else 0
+            tx_count = int(r2.json().get("result", "0x0"), 16) if isinstance(r2, httpx.Response) and r2.status_code == 200 else 0
+            return {
+                "balance_wei": bal_wei,
+                "balance_eth": round(bal_wei / 1e18, 6),
+                "tx_count": tx_count,
+                "source": "live_infura_mainnet_rpc"
+            }
+    except Exception:
+        return {}
+
